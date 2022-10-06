@@ -6,25 +6,23 @@ To get started with building AOSP GSI, you'll need to get familiar with [Git and
 
 ---
 
-- First, open a new Terminal window in your home directory, yes, home directory cuz I hardcoded it to my script, then clone this repo with the following commands:
+- First, open a new Terminal window and clone this repo with the following command:
 
-	```shell
-	git clone https://github.com/utkustnr/treble_stuff -b 13 ; cd ./treble_stuff
 	```
----
-
-- If you skipped Phhs GSI building guide then issue this command to set everything up: `bash ./ready-distro.sh <optional:git name> <optional:git mail>`
-- If you *didn't skip* and *actually read it* like anyone who is about to clone **hundreds of gb**, skip to next part.
----
-
-- Finally, start the build script (Will generate arm64-bvn variant by default, edit 62nd line for others):
-
-	```shell
-	bash ./build.sh
+	git clone https://github.com/utkustnr/treble_stuff -b 13
 	```
+
+- Then, start the build script:
+
+	```
+	bash ./treble_stuff/build.sh
+	```
+
+- This is a network, storage, cpu and ram intensive process that can go on for hours and occupy about 100 gb for repo and another 100-150 gb for build. At the time of writing download size for android 13 r8 repo is 30~ gb.
+
 ---
 
-This script is made by someone who learned how to create .patch files overnight just recently.
+This script is made by someone who is pretty new to these stuff. 
 
 If you want flexible, reliable and customizable build scripts feel free to edit my stuff or use the sources I used.
 

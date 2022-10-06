@@ -21,6 +21,8 @@ then
 	git config --global user.name $1
 	git config --global user.email $2
 else 
-	echo "I didn't receive any argument, skipping git creds"
+	echo "I didn't receive any argument, set git creds with"
+	echo "git config --global user.name"
+	echo "and"
+	echo "git config --global user.email"
 fi
-git clone https://github.com/utkustnr/treble_stuff.git
