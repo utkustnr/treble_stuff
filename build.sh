@@ -19,7 +19,8 @@ initRepos() {
 		cd $RL
 		repo init -u https://android.googlesource.com/platform/manifest -b android-13.0.0_r8 --depth=1
 		echo
-
+	fi
+	if [ ! -f $RL/.repo/local_manifests/manifest.xml ]; then
 		echo "--> Moving Local Manifest"
 		mkdir -p $RL/.repo/local_manifests
 		mv $RL/manifest.xml $RL/.repo/local_manifests
@@ -53,15 +54,6 @@ makeMake() {
 	echo "--> Generating makefiles for Phh targets"
 	cd $RL/device/phh/treble
 	bash ./generate.sh
-	cd $RL
-	echo
-}
-
-buildTrebleApp() {
-	echo "--> Building treble_app"
-	cd $RL/treble_app
-	bash ./build.sh release
-	cp ./TrebleApp.apk ../vendor/hardware_overlay/TrebleApp/app.apk
 	cd $RL
 	echo
 }
@@ -100,9 +92,8 @@ syncRepos
 applyPatches
 setupEnv
 makeMake
-buildTrebleApp
 buildVariant
-#buildVndkliteVariant
+buildVndkliteVariant
 #generatePackages
 
 END=`date +%s`
