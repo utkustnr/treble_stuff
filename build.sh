@@ -2,12 +2,13 @@
 
 echo
 echo "------------------------------"
-echo "     Android Build Script     "
+echo "   Generic AOSP Build Script  "
 echo "                              "
 echo "        If You're Stuck       "
 echo "     Keep Calm And Ctrl+C     "
 echo "------------------------------"
 echo
+sleep 5
 
 set -e
 
@@ -17,7 +18,7 @@ initRepos() {
 	if [ ! -f $RL/.repo/manifest.xml ]; then
 		echo "--> Initializing Repo"
 		cd $RL
-		repo init -u https://android.googlesource.com/platform/manifest -b android-13.0.0_r8 --depth=1
+		repo init -u https://android.googlesource.com/platform/manifest -b android-13.0.0_r11 --depth=1
 		echo
 	fi
 	if [ ! -f $RL/.repo/local_manifests/manifest.xml ]; then
@@ -26,6 +27,13 @@ initRepos() {
 		mv $RL/manifest.xml $RL/.repo/local_manifests
 		echo
 	fi
+	#Placeholder as I sort my patches
+	#if [ ! -f $RL/treble_patches ]; then
+	#	echo "--> Fetching Patch List from Remote Location"
+	#	git clone https://github.com/ChonDoit/treble_superior_patches.git -b 13 ./treble_patches
+	#	echo
+	#fi
+	
 }
 
 syncRepos() {
@@ -46,7 +54,7 @@ setupEnv() {
 	source build/envsetup.sh &>/dev/null
 	mkdir -p $HOME/builds
 	mkdir -p $HOME/out
-	#export OUT_DIR=$HOME/out
+	export OUT_DIR=$HOME/out
 	echo
 }
 
@@ -59,19 +67,44 @@ makeMake() {
 }
 
 buildVariant() {
-	echo "--> Building treble_arm64_bvN"
-	lunch treble_arm64_bvN-userdebug
+	echo "--> Starting Build Process"
+	if [[ $2 = 64[Bb][Ff][Nn] ]]; then
+		target="treble_arm64_bfN"
+	elif [[ $2 = 64[Bb][Ff][Ss ]]; then
+		target="treble_arm64_bfS"
+	elif [[ $2 = 64[Bb][Ff][Zz] ]]; then
+		target="treble_arm64_bfZ"
+	elif [[ $2 = 64[Bb][Gg][Nn] ]]; then
+		target="treble_arm64_bgN"
+	elif [[ $2 = 64[Bb][Gg][Ss] ]]; then
+		target="treble_arm64_bgS"
+	elif [[ $2 = 64[Bb][Gg][Zz] ]]; then
+		target="treble_arm64_bgZ"
+	elif [[ $2 = 64[Bb][Oo][Nn] ]]; then
+		target="treble_arm64_boN"
+	elif [[ $2 = 64[Bb][Oo][Ss] ]]; then
+		target="treble_arm64_boS"
+	elif [[ $2 = 64[Bb][Oo][Zz] ]]; then
+		target="treble_arm64_boZ"
+	elif [[ $2 = 64[Bb][Vv][Nn] ]]; then
+		target="treble_arm64_bvN"
+	elif [[ $2 = 64[Bb][Vv][Ss] ]]; then
+		target="treble_arm64_bvS"
+	elif [[ $2 = 64[Bb][Vv][Zz] ]]; then
+		target="treble_arm64_bvZ"
+	fi
+	lunch $target-userdebug
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE installclean
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE -j$(nproc --all) systemimage
-	mv $OUT/system.img $HOME/builds/system-treble_arm64_bvN.img
+	mv $OUT/system.img $HOME/builds/system-$target.img
 	echo
 }
 
 buildVndkliteVariant() {
-	echo "--> Building treble_arm64_bvN-vndklite"
+	echo "--> Generating $target-vndklite"
 	cd $RL/sas-creator
-	sudo bash ./lite-adapter.sh 64 $HOME/builds/system-treble_arm64_bvN.img
-	cp s.img $HOME/builds/system-treble_arm64_bvN-vndklite.img
+	sudo bash ./lite-adapter.sh 64 $HOME/builds/system-$target.img
+	cp s.img $HOME/builds/system-$target-vndklite.img
 	sudo rm -rf s.img d tmp
 	cd $RL
 	echo
@@ -79,7 +112,10 @@ buildVndkliteVariant() {
 
 generatePackages() {
 	echo "--> Generating packages"
-	xz -cv $HOME/builds/system-treble_arm64_bvN.img -T0 > $HOME/builds/system-treble_arm64_bvN.img.xz
+	xz -cv $HOME/builds/system-$target.img -T0 > $HOME/builds/system-$target.img.xz
+	if [[ $3 = "vndklite" ]]; then
+		xz -cv $HOME/builds/system-$target-vndklite.img -T0 > $HOME/builds/system-$target-vndklite.img.xz
+	fi
 	rm -rf $HOME/builds/system-*.img
 	echo
 }
@@ -87,14 +123,105 @@ generatePackages() {
 START=`date +%s`
 BUILD_DATE="$(date +%Y%m%d)"
 
-initRepos
-syncRepos
-applyPatches
-setupEnv
-makeMake
-buildVariant
-buildVndkliteVariant
-#generatePackages
+#What you see below is how AI term is used in marketing these days
+
+if [[ $1 = "sync" ]]; then
+	if [[ $2 = 64* && $2 = *[Bb][FfGgOoVv][NnSsZz] ]]; then
+		if [[ $3 = "vndklite" ]]; then
+			if [[ $4 = "compress" ]]; then
+				echo "--> Syncing, building $2, generating vndklite and compressing"
+				sleep 2
+				initRepos
+				syncRepos
+				applyPatches
+				setupEnv
+				makeMake
+				buildVariant
+				buildVndkliteVariant
+				generatePackages
+			else
+				echo "--> Syncing, building $2 and generating vndklite"
+				sleep 2
+				initRepos
+				syncRepos
+				applyPatches
+				setupEnv
+				makeMake
+				buildVariant
+				buildVndkliteVariant
+			fi
+		elif [[ $3 = "compress" ]]; then
+			echo "--> Syncing, building $2 and compressing"
+			sleep 2
+			initRepos
+			syncRepos
+			applyPatches
+			setupEnv
+			makeMake
+			buildVariant
+			generatePackages
+		else
+			echo "--> Syncing and building $2"
+			sleep 2
+			initRepos
+			syncRepos
+			applyPatches
+			setupEnv
+			makeMake
+			buildVariant
+		fi
+	else
+		echo "Invalid Args"
+		echo "Correct Usage Is :"
+		echo "bash ./build.sh [dry or sync] [64{B}{FGOV}{NSZ}] [vndklite] [compress]"
+	fi
+elif [[ $1 = "dry" ]]; then
+	if [[ $2 = 64* && $2 = *[Bb][FfGgOoVv][NnSsZz] ]]; then
+		if [[ $3 = "vndklite" ]]; then
+			if [[ $4 = "compress" ]]; then
+				echo "--> Building $2 dry, generating vndklite and compressing"
+				sleep 2
+				applyPatches
+				setupEnv
+				makeMake
+				buildVariant
+				buildVndkliteVariant
+				generatePackages
+			else
+				echo "--> Building $2 dry and generating vndklite"
+				sleep 2
+				applyPatches
+				setupEnv
+				makeMake
+				buildVariant
+				buildVndkliteVariant
+			fi
+		elif [[ $3 = "compress" ]]; then
+			echo "--> Building $2 dry and compressing"
+			sleep 2
+			applyPatches
+			setupEnv
+			makeMake
+			buildVariant
+			generatePackages
+		else
+			echo "--> Building $2 dry"
+			sleep 2
+			applyPatches
+			setupEnv
+			makeMake
+			buildVariant
+		fi
+	else
+		echo "Invalid Args"
+		echo "Correct Usage Is :"
+		echo "bash ./build.sh [dry or sync] [ 64{B}{FGOV}{NSZ} ] [vndklite] [compress]"
+	fi
+else
+	echo "Invalid Args"
+	echo "Correct Usage Is :"
+	echo "bash ./build.sh [dry or sync] [ 64{B}{FGOV}{NSZ} ] [vndklite] [compress]"
+fi
 
 END=`date +%s`
 ELAPSEDM=$(($(($END-$START))/60))

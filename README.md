@@ -15,10 +15,22 @@ To get started with building AOSP GSI, you'll need to get familiar with [Git and
 - Then, start the build script:
 
 	```
-	bash ./treble_stuff/build.sh
+	bash ./treble_stuff/build.sh sync 64bvs vndklite compress
 	```
+Accepted arguments : ` [dry or sync] [64{B}{FGOV}{NSZ}] [vndklite] [compress]` 
 
-- This is a network, storage, cpu and ram intensive process that can go on for hours and occupy about 100 gb for repo and another 100-150 gb for build. At the time of writing download size for android 13 r8 repo is 30~ gb.
+1. Sync is required for first run, dry can be run afterwards to speed up the process
+2. 64B is fixed, F for floss, G for gapps, O for gapps-go, V for vanilla, N for no su, S for su, Z for dynamic su
+3. Vndklite version of the same image will be created if applied
+4. Images will be compressed into .xz and originals gets deleted if applied
+
++ `sync 64bvn vndklite` will build vanilla and vndklite variant of it without su
++ `sync 64bgs compress` will build gapps with su then compress it
++ `sync 64bos vndklite compress` will build gapps-go and vndklite variant of it with su then compress both
++ `sync 64bfz vndklite` will build floss and vndklite variant of it with dynamic su
+
+
+This is a network, storage, cpu and ram intensive process that can go on for hours and occupy about 100 gb for repo and another 100-150 gb for build. At the time of writing download size for android 13 r8 repo is 30~ gb.
 
 ---
 
