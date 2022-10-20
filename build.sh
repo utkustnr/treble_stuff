@@ -13,7 +13,7 @@ echo "------------------------------"
 echo
 
 if (( $ram+$swap < 16 )); then
-    echo "WARNING"
+	echo "WARNING"
 	echo "Your system memory is not enough to build."
 	echo "You can try increasing swap or lowering threads used."
 	echo "WARNING"
