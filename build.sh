@@ -1,5 +1,8 @@
 #!/bin/bash
 
+ram=$(free -g | grep Mem: | awk '{print $2}')
+swap=$(free -g | grep Swap: | awk '{print $2}')
+
 echo
 echo "------------------------------"
 echo "   Generic AOSP Build Script  "
@@ -8,6 +11,14 @@ echo "        If You're Stuck       "
 echo "     Keep Calm And Ctrl+C     "
 echo "------------------------------"
 echo
+
+if (( $ram+$swap < 16 )); then
+    echo "WARNING"
+	echo "Your system memory is not enough to build."
+	echo "You can try increasing swap or lowering threads used."
+	echo "WARNING"
+fi
+
 sleep 5
 
 set -e
@@ -30,6 +41,7 @@ initRepos() {
 	#Placeholder as I sort my patches
 	#if [ ! -f $RL/treble_patches ]; then
 	#	echo "--> Fetching Patch List from Remote Location"
+	#	rm -rf ./treble_patches
 	#	git clone https://github.com/ChonDoit/treble_superior_patches.git -b 13 ./treble_patches
 	#	echo
 	#fi
@@ -59,11 +71,13 @@ setupEnv() {
 }
 
 makeMake() {
-	echo "--> Generating makefiles for Phh targets"
-	cd $RL/device/phh/treble
-	bash ./generate.sh
-	cd $RL
-	echo
+	if [ ! -f $RL/device/phh/treble/treble_arm64_*.mk ]; then
+		echo "--> Generating makefiles for Phh targets"
+		cd $RL/device/phh/treble
+		bash ./generate.sh
+		cd $RL
+		echo
+	fi
 }
 
 buildVariant() {
@@ -123,35 +137,10 @@ generatePackages() {
 START=`date +%s`
 BUILD_DATE="$(date +%Y%m%d)"
 
-#What you see below is how AI term is used in marketing these days
-
-if [[ $1 = "sync" ]]; then
-	if [[ $2 = 64* && $2 = *[Bb][FfGgOoVv][NnSsZz] ]]; then
-		if [[ $3 = "vndklite" ]]; then
-			if [[ $4 = "compress" ]]; then
-				echo "--> Syncing, building $2, generating vndklite and compressing"
-				sleep 2
-				initRepos
-				syncRepos
-				applyPatches
-				setupEnv
-				makeMake
-				buildVariant
-				buildVndkliteVariant
-				generatePackages
-			else
-				echo "--> Syncing, building $2 and generating vndklite"
-				sleep 2
-				initRepos
-				syncRepos
-				applyPatches
-				setupEnv
-				makeMake
-				buildVariant
-				buildVndkliteVariant
-			fi
-		elif [[ $3 = "compress" ]]; then
-			echo "--> Syncing, building $2 and compressing"
+if [[ $1 = "sync" && $2 = 64[Bb][FfGgOoVv][NnSsZz] ]]; then
+	if [[ $3 = "vndklite" ]]; then
+		if [[ $4 = "compress" ]]; then
+			echo "--> Syncing, building $2, generating vndklite and compressing"
 			sleep 2
 			initRepos
 			syncRepos
@@ -159,9 +148,10 @@ if [[ $1 = "sync" ]]; then
 			setupEnv
 			makeMake
 			buildVariant
+			buildVndkliteVariant
 			generatePackages
 		else
-			echo "--> Syncing and building $2"
+			echo "--> Syncing, building $2 and generating vndklite"
 			sleep 2
 			initRepos
 			syncRepos
@@ -169,54 +159,65 @@ if [[ $1 = "sync" ]]; then
 			setupEnv
 			makeMake
 			buildVariant
+			buildVndkliteVariant
 		fi
+	elif [[ $3 = "compress" ]]; then
+		echo "--> Syncing, building $2 and compressing"
+		sleep 2
+		initRepos
+		syncRepos
+		applyPatches
+		setupEnv
+		makeMake
+		buildVariant
+		generatePackages
 	else
-		echo "Invalid Args"
-		echo "Correct Usage Is :"
-		echo "bash ./build.sh [dry or sync] [64{B}{FGOV}{NSZ}] [vndklite] [compress]"
+		echo "--> Syncing and building $2"
+		sleep 2
+		initRepos
+		syncRepos
+		applyPatches
+		setupEnv
+		makeMake
+		buildVariant
 	fi
-elif [[ $1 = "dry" ]]; then
-	if [[ $2 = 64* && $2 = *[Bb][FfGgOoVv][NnSsZz] ]]; then
-		if [[ $3 = "vndklite" ]]; then
-			if [[ $4 = "compress" ]]; then
-				echo "--> Building $2 dry, generating vndklite and compressing"
-				sleep 2
-				applyPatches
-				setupEnv
-				makeMake
-				buildVariant
-				buildVndkliteVariant
-				generatePackages
-			else
-				echo "--> Building $2 dry and generating vndklite"
-				sleep 2
-				applyPatches
-				setupEnv
-				makeMake
-				buildVariant
-				buildVndkliteVariant
-			fi
-		elif [[ $3 = "compress" ]]; then
-			echo "--> Building $2 dry and compressing"
+elif [[ $1 = "dry" && $2 = 64[Bb][FfGgOoVv][NnSsZz] ]]; then
+	if [[ $3 = "vndklite" ]]; then
+		if [[ $4 = "compress" ]]; then
+			echo "--> Building $2 dry, generating vndklite and compressing"
 			sleep 2
-			applyPatches
 			setupEnv
 			makeMake
 			buildVariant
+			buildVndkliteVariant
 			generatePackages
 		else
-			echo "--> Building $2 dry"
+			echo "--> Building $2 dry and generating vndklite"
 			sleep 2
-			applyPatches
 			setupEnv
 			makeMake
 			buildVariant
+			buildVndkliteVariant
 		fi
+	elif [[ $3 = "compress" ]]; then
+		echo "--> Building $2 dry and compressing"
+		sleep 2
+		setupEnv
+		makeMake
+		buildVariant
+		generatePackages
 	else
-		echo "Invalid Args"
-		echo "Correct Usage Is :"
-		echo "bash ./build.sh [dry or sync] [ 64{B}{FGOV}{NSZ} ] [vndklite] [compress]"
+		echo "--> Building $2 dry"
+		sleep 2
+		setupEnv
+		makeMake
+		buildVariant
 	fi
+elif [[ $1 = "sync" && -z "$2$3$4" ]]; then
+	echo "--> OnlySync™"
+	sleep 2
+	initRepos
+	syncRepos
 else
 	echo "Invalid Args"
 	echo "Correct Usage Is :"
@@ -227,5 +228,5 @@ END=`date +%s`
 ELAPSEDM=$(($(($END-$START))/60))
 ELAPSEDS=$(($(($END-$START))-$ELAPSEDM*60))
 
-echo "--> Buildbot completed in $ELAPSEDM minutes and $ELAPSEDS seconds"
+echo "--> Script completed in $ELAPSEDM minutes and $ELAPSEDS seconds"
 echo
