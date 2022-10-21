@@ -19,7 +19,7 @@ To get started with building AOSP GSI, you'll need to get familiar with [Git and
 Accepted arguments : ` [dry or sync] [64{B}{FGOV}{NSZ}] [vndklite] [compress]` [^1]
 
 1. Sync is required for first run, dry can be run afterwards to speed up the process
-2. 64B is fixed, F for floss, G for gapps, O for gapps-go, V for vanilla, N for no su, S for su, Z for dynamic su
+2. 64B is fixed, F for foss, G for gapps, O for gapps-go, V for vanilla, N for no su, S for su, Z for dynamic su
 3. Vndklite version of the same image will be created if applied
 4. Images will be compressed into .xz and originals gets deleted if applied
 
@@ -47,6 +47,6 @@ Big shoutout to
 - [sooti](https://github.com/sooti)
 - and everyone I yoinked code from.
 
-![treble_stuff](https://raw.githubusercontent.com/utkustnr/dotfiles/main/meme.png)
+![treble_stuff](https://raw.githubusercontent.com/utkustnr/dotfiles/main/reference/meme.png)
 
 [^1]: Gapps-go and floss variants along with dynamic su variants aren't tested. Added them anyway for futureproofing.

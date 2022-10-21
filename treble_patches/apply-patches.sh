@@ -13,7 +13,7 @@ for project in $(cd $patches; echo *);do
 	git clean -fdx; git reset --hard
 	for patch in $patches/$project/*.patch;do
 		if patch -f -p1 --dry-run -R < $patch > /dev/null; then
-            echo "ALREDY APPLIED: $patch";
+			echo "ALREDY APPLIED: $patch";
 			continue
 		fi
 		if git apply --check $patch;then

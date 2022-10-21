@@ -95,7 +95,9 @@ makeMake() {
 }
 
 buildVariant() {
+	echo
 	echo "--> Starting build process"
+	echo
 	sleep 1
 	if [[ $2 = 64[Bb][Ff][Nn] ]]; then
 		target="treble_arm64_bfN"
@@ -130,7 +132,9 @@ buildVariant() {
 }
 
 buildVndkliteVariant() {
+	echo
 	echo "--> Generating $target-vndklite"
+	echo
 	sleep 1
 	cd $RL/sas-creator
 	sudo bash ./lite-adapter.sh 64 $HOME/builds/system-$target.img
@@ -141,7 +145,9 @@ buildVndkliteVariant() {
 }
 
 generatePackages() {
+	echo
 	echo "--> Generating packages"
+	echo
 	sleep 1
 	xz -cv $HOME/builds/system-$target.img -T0 > $HOME/builds/system-$target.img.xz
 	if [[ $3 = "vndklite" ]]; then
@@ -258,14 +264,18 @@ elif [[ $1 = "sync" && -z "$2$3$4" ]]; then
 	initRepos
 	syncRepos
 else
+	echo
+	echo "#############"
 	echo "Invalid Args"
 	echo "Correct Usage Is :"
 	echo "bash ./build.sh [dry or sync] [ 64{B}{FGOV}{NSZ} ] [vndklite] [compress]"
+	echo
 fi
 
 END=`date +%s`
 ELAPSEDM=$(($(($END-$START))/60))
 ELAPSEDS=$(($(($END-$START))-$ELAPSEDM*60))
 
+echo
 echo "--> Jobs completed in $ELAPSEDM minutes and $ELAPSEDS seconds"
 echo
