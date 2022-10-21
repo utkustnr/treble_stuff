@@ -12,6 +12,10 @@ for project in $(cd $patches; echo *);do
 	pushd $p &>/dev/null
 	git clean -fdx; git reset --hard
 	for patch in $patches/$project/*.patch;do
+		if patch -f -p1 --dry-run -R < $patch > /dev/null; then
+            echo "ALREDY APPLIED: $patch";
+			continue
+		fi
 		if git apply --check $patch;then
 			git am $patch
 		elif patch -f -p1 --dry-run < $patch > /dev/null;then
@@ -21,7 +25,7 @@ for project in $(cd $patches; echo *);do
 			git add -u
 			git am --continue
 		else
-			echo "Failed $patch"
+			echo "FAILED: $patch"
 			exit 1
 		fi
 	done
