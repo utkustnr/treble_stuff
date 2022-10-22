@@ -67,6 +67,7 @@ applyPatches() {
 	echo "--> Applying patches"
 	echo
 	sleep 1
+	cd $RL
 	bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/patches
 	echo
 }
@@ -77,8 +78,12 @@ setupEnv() {
 	echo
 	sleep 1
 	source build/envsetup.sh &>/dev/null
-	mkdir -p $HOME/builds
-	mkdir -p $HOME/out
+	if [ -f $HOME/builds ]; then
+		mkdir -p $HOME/builds
+	fi
+	if [ -f $HOME/out ]; then
+		mkdir -p $HOME/out
+	fi
 	export OUT_DIR=$HOME/out
 	echo
 }
@@ -138,7 +143,7 @@ buildVariant() {
 	fi
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE installclean
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE -j$(nproc --all) systemimage
-	mv $OUT/target/product/*/system.img $HOME/builds/system-${target_name}.img
+	mv $OUT/target/product/*/system.img $HOME/builds/trebledroid-13-${target_name}.img
 	echo
 }
 
@@ -148,8 +153,8 @@ buildVndkliteVariant() {
 	echo
 	sleep 1
 	cd $RL/sas-creator
-	sudo bash ./lite-adapter.sh 64 $HOME/builds/system-${target_name}.img
-	cp s.img $HOME/builds/system-${target_name}-vndklite.img
+	sudo bash ./lite-adapter.sh 64 $HOME/builds/trebledroid-13-${target_name}.img
+	cp s.img $HOME/builds/trebledroid-13-${target_name}-vndklite.img
 	sudo rm -rf s.img d tmp
 	cd $RL
 	echo
@@ -160,11 +165,11 @@ generatePackages() {
 	echo "--> Generating packages"
 	echo
 	sleep 1
-	xz -cv $HOME/builds/system-${target_name}.img -T0 > $HOME/builds/system-${target_name}.img.xz
-	if [ -f $HOME/builds/system-${target_name}-vndklite.img ]; then
-		xz -cv $HOME/builds/system-${target_name}-vndklite.img -T0 > $HOME/builds/system-${target_name}-vndklite.img.xz
+	xz -cv $HOME/builds/trebledroid-13-${target_name}.img -T0 > $HOME/builds/trebledroid-13-${target_name}.img.xz
+	if [ -f $HOME/builds/trebledroid-13-${target_name}-vndklite.img ]; then
+		xz -cv $HOME/builds/trebledroid-13-${target_name}-vndklite.img -T0 > $HOME/builds/trebledroid-13-${target_name}-vndklite.img.xz
 	fi
-	rm -rf $HOME/builds/system-*.img
+	rm -rf $HOME/builds/trebledroid-13-*.img
 	echo
 }
 
