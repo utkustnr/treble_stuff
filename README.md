@@ -49,4 +49,4 @@ Big shoutout to
 
 ![treble_stuff](https://raw.githubusercontent.com/utkustnr/dotfiles/main/reference/meme.png)
 
-[^1]: Gapps-go and floss variants along with dynamic su variants aren't tested. Added them anyway for futureproofing.
+[^1]: Gapps-go and foss variants along with dynamic su variants aren't tested. Added them anyway for futureproofing.

@@ -100,34 +100,45 @@ buildVariant() {
 	echo
 	sleep 1
 	if [[ $2 = 64[Bb][Ff][Nn] ]]; then
-		target="treble_arm64_bfN"
+		lunch treble_arm64_bfN-userdebug
+		target_name="arm64_bfN"
 	elif [[ $2 = 64[Bb][Ff][Ss ]]; then
-		target="treble_arm64_bfS"
+		lunch treble_arm64_bfS-userdebug
+		target_name="arm64_bfS"
 	elif [[ $2 = 64[Bb][Ff][Zz] ]]; then
-		target="treble_arm64_bfZ"
+		lunch treble_arm64_bfZ-userdebug
+		target_name="arm64_bfZ"
 	elif [[ $2 = 64[Bb][Gg][Nn] ]]; then
-		target="treble_arm64_bgN"
+		lunch treble_arm64_bgN-userdebug
+		target_name="arm64_bgN"
 	elif [[ $2 = 64[Bb][Gg][Ss] ]]; then
-		target="treble_arm64_bgS"
+		lunch treble_arm64_bgS-userdebug
+		target_name="arm64_bgS"
 	elif [[ $2 = 64[Bb][Gg][Zz] ]]; then
-		target="treble_arm64_bgZ"
+		lunch treble_arm64_bgZ-userdebug
+		target_name="arm64_bgZ"
 	elif [[ $2 = 64[Bb][Oo][Nn] ]]; then
-		target="treble_arm64_boN"
+		lunch treble_arm64_boN-userdebug
+		target_name="arm64_boN"
 	elif [[ $2 = 64[Bb][Oo][Ss] ]]; then
-		target="treble_arm64_boS"
+		lunch treble_arm64_boS-userdebug
+		target_name="arm64_boS"
 	elif [[ $2 = 64[Bb][Oo][Zz] ]]; then
-		target="treble_arm64_boZ"
+		lunch treble_arm64_boZ-userdebug
+		target_name="arm64_boZ"
 	elif [[ $2 = 64[Bb][Vv][Nn] ]]; then
-		target="treble_arm64_bvN"
+		lunch treble_arm64_bvN-userdebug
+		target_name="arm64_bvN"
 	elif [[ $2 = 64[Bb][Vv][Ss] ]]; then
-		target="treble_arm64_bvS"
+		lunch treble_arm64_bvS-userdebug
+		target_name="arm64_bvS"
 	elif [[ $2 = 64[Bb][Vv][Zz] ]]; then
-		target="treble_arm64_bvZ"
+		lunch treble_arm64_bvZ-userdebug
+		target_name="arm64_bvZ"
 	fi
-	lunch ${target}-userdebug
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE installclean
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE -j$(nproc --all) systemimage
-	mv $OUT/system.img $HOME/builds/system-$target.img
+	mv $OUT/target/product/*/system.img $HOME/builds/system-${target_name}.img
 	echo
 }
 
@@ -137,8 +148,8 @@ buildVndkliteVariant() {
 	echo
 	sleep 1
 	cd $RL/sas-creator
-	sudo bash ./lite-adapter.sh 64 $HOME/builds/system-$target.img
-	cp s.img $HOME/builds/system-$target-vndklite.img
+	sudo bash ./lite-adapter.sh 64 $HOME/builds/system-${target_name}.img
+	cp s.img $HOME/builds/system-${target_name}-vndklite.img
 	sudo rm -rf s.img d tmp
 	cd $RL
 	echo
@@ -149,9 +160,9 @@ generatePackages() {
 	echo "--> Generating packages"
 	echo
 	sleep 1
-	xz -cv $HOME/builds/system-$target.img -T0 > $HOME/builds/system-$target.img.xz
-	if [[ $3 = "vndklite" ]]; then
-		xz -cv $HOME/builds/system-$target-vndklite.img -T0 > $HOME/builds/system-$target-vndklite.img.xz
+	xz -cv $HOME/builds/system-${target_name}.img -T0 > $HOME/builds/system-${target_name}.img.xz
+	if [ -f $HOME/builds/system-${target_name}-vndklite.img ]; then
+		xz -cv $HOME/builds/system-${target_name}-vndklite.img -T0 > $HOME/builds/system-${target_name}-vndklite.img.xz
 	fi
 	rm -rf $HOME/builds/system-*.img
 	echo
