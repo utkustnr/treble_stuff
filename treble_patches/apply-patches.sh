@@ -15,6 +15,7 @@ for project in $(cd $patches; echo *); do
 		if patch -f -p1 --dry-run -R < $patch > /dev/null; then
 			echo "####################################"
 			echo "ALREADY APPLIED: $patch"
+			echo "####################################"
 			continue
 		fi
 		if git apply --check $patch; then
@@ -28,6 +29,7 @@ for project in $(cd $patches; echo *); do
 		else
 			echo "####################################"
 			echo "FAILED: $patch"
+			echo "####################################"
 		fi
 	done
 	popd &>/dev/null

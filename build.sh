@@ -46,8 +46,8 @@ initRepos() {
 	#Placeholder as I sort my patches
 	#if [ ! -f $RL/treble_patches ]; then
 	#	echo "--> Fetching Patch List from Remote Location"
-	#	rm -rf ./treble_patches
-	#	git clone https://github.com/ChonDoit/treble_superior_patches.git -b 13 ./treble_patches
+	#	rm -rf $RL/treble_patches
+	#	git clone https://github.com/ChonDoit/treble_superior_patches.git -b 13 $RL/treble_patches
 	#	echo
 	#fi
 }
@@ -78,10 +78,10 @@ setupEnv() {
 	echo
 	sleep 1
 	source build/envsetup.sh &>/dev/null
-	if [ -f $HOME/builds ]; then
+	if [ ! -f $HOME/builds ]; then
 		mkdir -p $HOME/builds
 	fi
-	if [ -f $HOME/out ]; then
+	if [ ! -f $HOME/out ]; then
 		mkdir -p $HOME/out
 	fi
 	export OUT_DIR=$HOME/out
