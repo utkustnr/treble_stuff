@@ -1,7 +1,7 @@
-From 2a51c36acfdc04aa2b39bf20428548419753adc7 Mon Sep 17 00:00:00 2001
+From 647b037cf7660d2713ebbaad18c013f93767097d Mon Sep 17 00:00:00 2001
 From: ironydelerium <42721860+ironydelerium@users.noreply.github.com>
 Date: Fri, 31 Dec 2021 02:20:28 -0800
-Subject: [PATCH 4/7] Reintroduce 'public void
+Subject: [PATCH 04/10] Reintroduce 'public void
  TelephonyMetrics.writeRilSendSms(int, int, int, int)'. (#8)
 
 The MediaTek IMS package for Android Q, at the very least (likely for the rest, too)
@@ -18,10 +18,10 @@ Co-authored-by: Sarah Vandomelen <sarah@sightworks.com>
  1 file changed, 13 insertions(+)
 
 diff --git a/src/java/com/android/internal/telephony/metrics/TelephonyMetrics.java b/src/java/com/android/internal/telephony/metrics/TelephonyMetrics.java
-index 5b47ae5b7a..f775fc8be4 100644
+index 3fdbfe0ed7..9479e77dc6 100644
 --- a/src/java/com/android/internal/telephony/metrics/TelephonyMetrics.java
 +++ b/src/java/com/android/internal/telephony/metrics/TelephonyMetrics.java
-@@ -2324,6 +2324,19 @@ public class TelephonyMetrics {
+@@ -2320,6 +2320,19 @@ public class TelephonyMetrics {
          smsSession.increaseExpectedResponse();
      }
  
