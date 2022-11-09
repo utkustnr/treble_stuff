@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<manifest>
 <remote name="phh" fetch="https://github.com/phhusson/" />
 <remote name="trebledroid" fetch="https://github.com/TrebleDroid/" />
 <remote name="ponces" fetch="https://github.com/ponces/" />
