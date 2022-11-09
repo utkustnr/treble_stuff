@@ -1,7 +1,7 @@
-From 7f323ebe40fac2fac877a94622de62f95f6aad1e Mon Sep 17 00:00:00 2001
+From 13670ac74fbf38dca95ed1639bb1baabba1f1700 Mon Sep 17 00:00:00 2001
 From: Peter Cai <peter@typeblog.net>
 Date: Wed, 1 Jun 2022 16:56:46 -0400
-Subject: [PATCH 07/47] camera: Implement property to override default camera
+Subject: [PATCH 07/25] camera: Implement property to override default camera
 
 Complement to the frameworks/base patch.
 

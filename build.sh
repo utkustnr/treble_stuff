@@ -32,7 +32,7 @@ initRepos() {
 		echo "--> Initializing Repo"
 		echo
 		cd $RL
-		repo init -u https://android.googlesource.com/platform/manifest -b android-13.0.0_r11 --depth=1
+		repo init -u https://android.googlesource.com/platform/manifest -b android-13.0.0_r14 --depth=1
 		echo
 	fi
 	if [ ! -f $RL/.repo/local_manifests/manifest.xml ]; then
@@ -43,7 +43,7 @@ initRepos() {
 		mv $RL/manifest.xml $RL/.repo/local_manifests
 		echo
 	fi
-	#Placeholder as I sort my patches
+	#Placeholder for 
 	#if [ ! -f $RL/treble_patches ]; then
 	#	echo "--> Fetching Patch List from Remote Location"
 	#	rm -rf $RL/treble_patches
@@ -78,12 +78,8 @@ setupEnv() {
 	echo
 	sleep 1
 	source build/envsetup.sh &>/dev/null
-	if [ ! -f $HOME/builds ]; then
-		mkdir -p $HOME/builds
-	fi
-	if [ ! -f $HOME/out ]; then
-		mkdir -p $HOME/out
-	fi
+	mkdir -p $HOME/builds
+	mkdir -p $HOME/out
 	export OUT_DIR=$HOME/out
 	echo
 }
@@ -110,40 +106,22 @@ buildVariant() {
 	elif [[ $2 = 64[Bb][Ff][Ss ]]; then
 		lunch treble_arm64_bfS-userdebug
 		target_name="arm64_bfS"
-	elif [[ $2 = 64[Bb][Ff][Zz] ]]; then
-		lunch treble_arm64_bfZ-userdebug
-		target_name="arm64_bfZ"
 	elif [[ $2 = 64[Bb][Gg][Nn] ]]; then
 		lunch treble_arm64_bgN-userdebug
 		target_name="arm64_bgN"
 	elif [[ $2 = 64[Bb][Gg][Ss] ]]; then
 		lunch treble_arm64_bgS-userdebug
 		target_name="arm64_bgS"
-	elif [[ $2 = 64[Bb][Gg][Zz] ]]; then
-		lunch treble_arm64_bgZ-userdebug
-		target_name="arm64_bgZ"
-	elif [[ $2 = 64[Bb][Oo][Nn] ]]; then
-		lunch treble_arm64_boN-userdebug
-		target_name="arm64_boN"
-	elif [[ $2 = 64[Bb][Oo][Ss] ]]; then
-		lunch treble_arm64_boS-userdebug
-		target_name="arm64_boS"
-	elif [[ $2 = 64[Bb][Oo][Zz] ]]; then
-		lunch treble_arm64_boZ-userdebug
-		target_name="arm64_boZ"
 	elif [[ $2 = 64[Bb][Vv][Nn] ]]; then
 		lunch treble_arm64_bvN-userdebug
 		target_name="arm64_bvN"
 	elif [[ $2 = 64[Bb][Vv][Ss] ]]; then
 		lunch treble_arm64_bvS-userdebug
 		target_name="arm64_bvS"
-	elif [[ $2 = 64[Bb][Vv][Zz] ]]; then
-		lunch treble_arm64_bvZ-userdebug
-		target_name="arm64_bvZ"
 	fi
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE installclean
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE -j$(nproc --all) systemimage
-	mv $OUT/target/product/*/system.img $HOME/builds/trebledroid-13-${target_name}.img
+	mv $OUT/target/product/*/system.img $HOME/builds/TrebleDroid-13-${target_name}.img
 	echo
 }
 
@@ -153,8 +131,8 @@ buildVndkliteVariant() {
 	echo
 	sleep 1
 	cd $RL/sas-creator
-	sudo bash ./lite-adapter.sh 64 $HOME/builds/trebledroid-13-${target_name}.img
-	cp s.img $HOME/builds/trebledroid-13-${target_name}-vndklite.img
+	sudo bash ./lite-adapter.sh 64 $HOME/builds/TrebleDroid-13-${target_name}.img
+	cp s.img $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img
 	sudo rm -rf s.img d tmp
 	cd $RL
 	echo
@@ -165,18 +143,18 @@ generatePackages() {
 	echo "--> Generating packages"
 	echo
 	sleep 1
-	xz -cv $HOME/builds/trebledroid-13-${target_name}.img -T0 > $HOME/builds/trebledroid-13-${target_name}.img.xz
-	if [ -f $HOME/builds/trebledroid-13-${target_name}-vndklite.img ]; then
-		xz -cv $HOME/builds/trebledroid-13-${target_name}-vndklite.img -T0 > $HOME/builds/trebledroid-13-${target_name}-vndklite.img.xz
+	xz -cv $HOME/builds/TrebleDroid-13-${target_name}.img -T0 > $HOME/builds/TrebleDroid-13-${target_name}.img.xz
+	if [ -f $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img ]; then
+		xz -cv $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img -T0 > $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img.xz
 	fi
-	rm -rf $HOME/builds/trebledroid-13-*.img
+	rm -rf $HOME/builds/TrebleDroid-13-*.img
 	echo
 }
 
 START=`date +%s`
 BUILD_DATE="$(date +%Y%m%d)"
 
-if [[ $1 = "sync" && $2 = 64[Bb][FfGgOoVv][NnSsZz] ]]; then
+if [[ $1 = "sync" && $2 = 64[Bb][FfGgVv][NnSs] ]]; then
 	if [[ $3 = "vndklite" ]]; then
 		if [[ $4 = "compress" ]]; then
 			echo
@@ -228,7 +206,7 @@ if [[ $1 = "sync" && $2 = 64[Bb][FfGgOoVv][NnSsZz] ]]; then
 		makeMake
 		buildVariant
 	fi
-elif [[ $1 = "dry" && $2 = 64[Bb][FfGgOoVv][NnSsZz] ]]; then
+elif [[ $1 = "dry" && $2 = 64[Bb][FfGgVv][NnSs] ]]; then
 	if [[ $3 = "vndklite" ]]; then
 		if [[ $4 = "compress" ]]; then
 			echo
@@ -284,7 +262,7 @@ else
 	echo "#############"
 	echo "Invalid Args"
 	echo "Correct Usage Is :"
-	echo "bash ./build.sh [dry or sync] [ 64{B}{FGOV}{NSZ} ] [vndklite] [compress]"
+	echo "bash ./build.sh [dry or sync] [ 64{B}{FGV}{NS} ] [vndklite] [compress]"
 	echo
 fi
 

@@ -1,7 +1,7 @@
-From c86fb8e2bc5096134c29a530cddfd636a8831c2d Mon Sep 17 00:00:00 2001
+From 5b4a3862e57bfce4c0a490e6419c263a3e9bc05b Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 5 Oct 2021 17:59:16 -0400
-Subject: [PATCH 02/38] Fallback to stupid autobrightness if brightness values
+Subject: [PATCH 02/31] Fallback to stupid autobrightness if brightness values
  are broken
 
 This is needed because of:
