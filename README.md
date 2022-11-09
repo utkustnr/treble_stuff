@@ -16,19 +16,11 @@ To get started with building AOSP GSI, you'll need to get familiar with [Git and
 	bash ./treble_stuff/build.sh sync 64bvs vndklite compress
 	```
 
-Accepted arguments : ` [dry or sync] [64{B}{FGV}{NS}] [vndklite] [compress]`
+Accepted arguments : ` [dry / sync] [64{B}{FGV}{NS}] [vndklite / secure / litesec / pack]`
 
-1. Sync is required for first run, dry can be run afterwards to speed up the process
-2. 64B is fixed, F for foss, G for gapps, V for vanilla, N for no root, S for root
-3. Vndklite version of the same image will be created if applied
-4. Images will be compressed into .xz and originals gets deleted if applied
-
-+ `sync` will only sync when no other args are given
-+ `sync 64bvn` will build vanilla without root
-+ `sync 64bvs vndklite` will build vanilla + vanilla-vndklite with root
-+ `sync 64bfn vndklite` will build floss + floss-vndklite without root
-+ `sync 64bgn vndklite compress` will build gapps + gapps-vndklite without root and compress both
-
+1. Sync is required for first run, dry can be used afterwards.
+2. Prefix with 64b, F for floss G for gapps V for vanilla, N for no root S for root
+3. All 4 args can be combined. Vndklite and secure will create their respective builds, litesec will create secure build FROM vndklite build (no need to combine with vndklite arg), pack will compress all images in builds folder to .xz format
 
 This is a network, storage, cpu and ram intensive process that can go on for hours and occupy about 100 gb for repo and another 100-150 gb for build. At the time of writing download size for android 13 r8 repo is 30~ gb. After build is done, total storage usage is 230~ gb.
 

@@ -132,8 +132,37 @@ buildVndkliteVariant() {
 	sleep 1
 	cd $RL/sas-creator
 	sudo bash ./lite-adapter.sh 64 $HOME/builds/TrebleDroid-13-${target_name}.img
-	cp s.img $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img
-	sudo rm -rf s.img d tmp
+	mv s.img $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img
+	sudo rm -rf d tmp
+	cd $RL
+	echo
+}
+
+buildSecureVariant() {
+	echo
+	echo "--> Generating $target-secure"
+	echo
+	sleep 1
+	cd $RL/sas-creator
+	sudo bash ./securize.sh $HOME/builds/TrebleDroid-13-${target_name}.img
+	mv s-secure.img $HOME/builds/TrebleDroid-13-${target_name}-secure.img
+	sudo rm -rf d tmp
+	cd $RL
+	echo
+}
+
+buildSecureVndkliteVariant() {
+	echo
+	echo "--> Generating $target-vndklite-secure"
+	echo
+	sleep 1
+	cd $RL/sas-creator
+	sudo bash ./lite-adapter.sh 64 $HOME/builds/TrebleDroid-13-${target_name}.img
+	mv s.img $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img
+	sudo rm -rf d tmp
+	sudo bash ./securize.sh $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img
+	mv s-secure.img $HOME/builds/TrebleDroid-13-${target_name}-vndklite-secure.img
+	sudo rm -rf d tmp
 	cd $RL
 	echo
 }
@@ -147,7 +176,13 @@ generatePackages() {
 	if [ -f $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img ]; then
 		xz -cv $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img -T0 > $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img.xz
 	fi
-	rm -rf $HOME/builds/TrebleDroid-13-*.img
+	if [ -f $HOME/builds/TrebleDroid-13-${target_name}-secure.img ]; then
+		xz -cv $HOME/builds/TrebleDroid-13-${target_name}-secure.img -T0 > $HOME/builds/TrebleDroid-13-${target_name}-secure.img.xz
+	fi
+	if [ -f $HOME/builds/TrebleDroid-13-${target_name}-vndklite-secure.img ]; then
+		xz -cv $HOME/builds/TrebleDroid-13-${target_name}-vndklite-secure.img -T0 > $HOME/builds/TrebleDroid-13-${target_name}-vndklite-secure.img.xz
+	fi
+	rm -rf $HOME/builds/TrebleDroid-13*.img
 	echo
 }
 
@@ -155,102 +190,28 @@ START=`date +%s`
 BUILD_DATE="$(date +%Y%m%d)"
 
 if [[ $1 = "sync" && $2 = 64[Bb][FfGgVv][NnSs] ]]; then
-	if [[ $3 = "vndklite" ]]; then
-		if [[ $4 = "compress" ]]; then
-			echo
-			echo "--> Jobs : 1- Sync , 2- Build $2 , 3- Generate vndklite , 4- Compress"
-			echo
-			sleep 2
-			initRepos
-			syncRepos
-			applyPatches
-			setupEnv
-			makeMake
-			buildVariant
-			buildVndkliteVariant
-			generatePackages
-		else
-			echo
-			echo "--> Jobs : 1- Sync , 2- Build $2 , 3- Generate vndklite"
-			echo
-			sleep 2
-			initRepos
-			syncRepos
-			applyPatches
-			setupEnv
-			makeMake
-			buildVariant
-			buildVndkliteVariant
-		fi
-	elif [[ $3 = "compress" ]]; then
-		echo
-		echo "--> Jobs : 1- Sync , 2- Build $2 , 3- Compress"
-		echo
-		sleep 2
-		initRepos
-		syncRepos
-		applyPatches
-		setupEnv
-		makeMake
-		buildVariant
-		generatePackages
-	else
-		echo
-		echo "--> Jobs : 1- Sync , 2- Build $2"
-		echo
-		sleep 2
-		initRepos
-		syncRepos
-		applyPatches
-		setupEnv
-		makeMake
-		buildVariant
-	fi
+	initRepos
+	syncRepos
+	applyPatches
+	setupEnv
+	makeMake
+	buildVariant
+	if [[ "vndklite" == +(["$3$4$5$6"]) ]]; then echo "buildVndkliteVariant"; fi
+	if [[ "secure" == +(["$3$4$5$6"]) ]]; then echo "buildSecureVariant"; fi
+	if [[ "litesec" == +(["$3$4$5$6"]) ]]; then echo "buildSecureVndkliteVariant"; fi
+	if [[ "pack" == +(["$3$4$5$6"]) ]]; then echo "generatePackages"; fi
+
 elif [[ $1 = "dry" && $2 = 64[Bb][FfGgVv][NnSs] ]]; then
-	if [[ $3 = "vndklite" ]]; then
-		if [[ $4 = "compress" ]]; then
-			echo
-			echo "--> Jobs : 1- Build $2 , 2- Generate vndklite , 3- Compress"
-			echo
-			sleep 2
-			applyPatches
-			setupEnv
-			makeMake
-			buildVariant
-			buildVndkliteVariant
-			generatePackages
-		else
-			echo
-			echo "--> Jobs : 1- Build $2 , 2- Generate vndklite"
-			echo
-			sleep 2
-			applyPatches
-			setupEnv
-			makeMake
-			buildVariant
-			buildVndkliteVariant
-		fi
-	elif [[ $3 = "compress" ]]; then
-		echo
-		echo "--> Jobs : 1- Build $2 , 2- Compress"
-		echo
-		sleep 2
-		applyPatches
-		setupEnv
-		makeMake
-		buildVariant
-		generatePackages
-	else
-		echo
-		echo "--> Jobs : 1- Build $2"
-		echo
-		sleep 2
-		applyPatches
-		setupEnv
-		makeMake
-		buildVariant
-	fi
-elif [[ $1 = "sync" && -z "$2$3$4" ]]; then
+	applyPatches
+	setupEnv
+	makeMake
+	buildVariant
+	if [[ "vndklite" == +(["$3$4$5$6"]) ]]; then echo "buildVndkliteVariant"; fi
+	if [[ "secure" == +(["$3$4$5$6"]) ]]; then echo "buildSecureVariant"; fi
+	if [[ "litesec" == +(["$3$4$5$6"]) ]]; then echo "buildSecureVndkliteVariant"; fi
+	if [[ "pack" == +(["$3$4$5$6"]) ]]; then echo "generatePackages"; fi
+
+elif [[ $1 = "sync" && -z "$2$3$4$5" ]]; then
 	echo
 	echo "--> OnlySync™"
 	echo
@@ -262,7 +223,7 @@ else
 	echo "#############"
 	echo "Invalid Args"
 	echo "Correct Usage Is :"
-	echo "bash ./build.sh [dry or sync] [ 64{B}{FGV}{NS} ] [vndklite] [compress]"
+	echo "bash ./build.sh [dry / sync] [64B{FGV}{NS}] [vndklite / secure / litesec / pack]"
 	echo
 fi
 
