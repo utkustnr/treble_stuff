@@ -196,20 +196,20 @@ if [[ $1 = "sync" && $2 = 64[Bb][FfGgVv][NnSs] ]]; then
 	setupEnv
 	makeMake
 	buildVariant
-	if [[ "vndklite" == +(["$3$4$5$6"]) ]]; then echo "buildVndkliteVariant"; fi
-	if [[ "secure" == +(["$3$4$5$6"]) ]]; then echo "buildSecureVariant"; fi
-	if [[ "litesec" == +(["$3$4$5$6"]) ]]; then echo "buildSecureVndkliteVariant"; fi
-	if [[ "pack" == +(["$3$4$5$6"]) ]]; then echo "generatePackages"; fi
+	if [[ "vndklite" == +(["$3$4$5$6"]) ]]; then buildVndkliteVariant; fi
+	if [[ "secure" == +(["$3$4$5$6"]) ]]; then buildSecureVariant; fi
+	if [[ "litesec" == +(["$3$4$5$6"]) ]]; then buildSecureVndkliteVariant; fi
+	if [[ "pack" == +(["$3$4$5$6"]) ]]; then generatePackages; fi
 
 elif [[ $1 = "dry" && $2 = 64[Bb][FfGgVv][NnSs] ]]; then
 	applyPatches
 	setupEnv
 	makeMake
 	buildVariant
-	if [[ "vndklite" == +(["$3$4$5$6"]) ]]; then echo "buildVndkliteVariant"; fi
-	if [[ "secure" == +(["$3$4$5$6"]) ]]; then echo "buildSecureVariant"; fi
-	if [[ "litesec" == +(["$3$4$5$6"]) ]]; then echo "buildSecureVndkliteVariant"; fi
-	if [[ "pack" == +(["$3$4$5$6"]) ]]; then echo "generatePackages"; fi
+	if [[ "vndklite" == +(["$3$4$5$6"]) ]]; then buildVndkliteVariant; fi
+	if [[ "secure" == +(["$3$4$5$6"]) ]]; then buildSecureVariant; fi
+	if [[ "litesec" == +(["$3$4$5$6"]) ]]; then buildSecureVndkliteVariant; fi
+	if [[ "pack" == +(["$3$4$5$6"]) ]]; then generatePackages; fi
 
 elif [[ $1 = "sync" && -z "$2$3$4$5" ]]; then
 	echo
