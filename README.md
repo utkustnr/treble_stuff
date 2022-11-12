@@ -4,6 +4,10 @@ To get started with building AOSP GSI, you'll need to get familiar with [Git and
 
 ---
 
+I started this project as a generic script but it became a learning ground for me. I recently added device specific stuff to my local manifest so if you are not interested in those please remove those lines from manifest.xml before running the script.
+
+---
+
 - First, open a new Terminal window and clone this repo with the following command:
 
 	```
