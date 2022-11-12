@@ -1,7 +1,7 @@
-From 8f4815a7d5ac3c593e467e92a1e7e76ce621469b Mon Sep 17 00:00:00 2001
+From 8af0cc211c2da968a51e81338d0f050e68050e3f Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 20 Mar 2021 14:31:01 +0100
-Subject: [PATCH 24/31] Automatically detect pick up sensor, so that an overlay
+Subject: [PATCH 24/33] Automatically detect pick up sensor, so that an overlay
  is required for the sole purpose of enabling pulse doze on pick up sensor
 
 ---

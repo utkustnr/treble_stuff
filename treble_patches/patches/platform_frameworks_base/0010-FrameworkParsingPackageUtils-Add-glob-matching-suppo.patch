@@ -1,7 +1,7 @@
-From 0456a4f9ed3dfa85f737a5c43b4aaa6ca2460247 Mon Sep 17 00:00:00 2001
+From fc5925c9c8b5f9afe0c7ee673d994cac99277c15 Mon Sep 17 00:00:00 2001
 From: Peter Cai <peter@typeblog.net>
 Date: Fri, 2 Sep 2022 21:36:06 -0400
-Subject: [PATCH 10/31] FrameworkParsingPackageUtils: Add glob matching support
+Subject: [PATCH 10/33] FrameworkParsingPackageUtils: Add glob matching support
  for properties
 
 This is now required in addition to the one in PackageParser in order

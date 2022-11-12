@@ -1,7 +1,7 @@
-From 79170fbec744482c91e24c540aec57b2b258bdf3 Mon Sep 17 00:00:00 2001
+From 7fd9c8ce01bb76d85b07a5a0c36442a2ac9c4a65 Mon Sep 17 00:00:00 2001
 From: Peter Cai <peter@typeblog.net>
 Date: Tue, 12 Oct 2021 21:37:22 -0400
-Subject: [PATCH 04/31] PackageParser: support glob matching for properties
+Subject: [PATCH 04/33] PackageParser: support glob matching for properties
 
 Needed to make phh's vendor overlays work
 ---
