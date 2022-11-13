@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
+<remote name="frax3r" fetch="https://github.com/utkustnr/" />
+<remote name="notmyst33d" fetch="https://github.com/notmyst33d/" />
 <remote name="phh" fetch="https://github.com/phhusson/" />
 <remote name="ponces" fetch="https://github.com/ponces/" />
+<remote name="seedvault-app" fetch="https://github.com/seedvault-app" />
 <remote name="trebledroid" fetch="https://github.com/TrebleDroid/" />
-<remote name="frax3r" fetch="https://github.com/utkustnr/" />
 <remote name="turex" fetch="https://github.com/turex/" />
-<remote name="notmyst33d" fetch="https://github.com/notmyst33d/" />
-<remote name="TheMuppets" fetch="https://github.com/TheMuppets/" />
 
+<!-- Base -->
 <project path="device/phh/treble" name="device_phh_treble" remote="frax3r" revision="android-13.0" />
 <project path="sas-creator" name="sas-creator" remote="frax3r" revision="master" />
 <project path="vendor/hardware_overlay" name="vendor_hardware_overlay" remote="trebledroid" revision="pie" />
@@ -16,10 +17,17 @@
 <project path="vendor/magisk" name="vendor_magisk" remote="phh" revision="android-10.0" />
 <project path="vendor/vndk-tests" name="vendor_vndk-tests" remote="phh" revision="master" />
 
+<!-- External -->
+<project path="external/aptx" name="libaptX" remote="notmyst33d" revision="main" />
+<project path="packages/apps/Seedvault" name="seedvault" remote="seedvault-app" revision="android13" />
+
+<!-- Device Specific -->
 <project path="device/huawei/anne" name="android_device_huawei_anne" remote="frax3r" revision="android-13.0" />
 <project path="device/huawei/hi6250-common" name="android_device_huawei_hi6250-common" remote="frax3r" revision="android-13.0" />
-<project path="external/aptx" name="libaptX" remote="notmyst33d" revision="main" />
+<project path="vendor/huawei" name="proprietary_vendor_huawei" remote="frax3r" revision="android-13.0" />
+
+<!-- Maybe later...
 <project path="kernel/huawei/hi6250" name="android_kernel_huawei_hi6250" remote="turex" revision="upstream" />
-<project path="vendor/huawei" name="proprietary_vendor_huawei" remote="TheMuppets" revision="lineage-17.1" />
+-->
 
 </manifest>

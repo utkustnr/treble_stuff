@@ -43,7 +43,7 @@ initRepos() {
 		mv $RL/manifest.xml $RL/.repo/local_manifests
 		echo
 	fi
-	#Placeholder for 
+	#Placeholder for external patch locations
 	#if [ ! -f $RL/treble_patches ]; then
 	#	echo "--> Fetching Patch List from Remote Location"
 	#	rm -rf $RL/treble_patches
@@ -100,7 +100,10 @@ buildVariant() {
 	echo "--> Starting build process"
 	echo
 	sleep 1
-	if [[ $2 = 64[Bb][Ff][Nn] ]]; then
+	if [[ $2 = aosp_anne ]]; then
+		lunch aosp_anne-userdebug
+		target_name="aosp_anne"
+	elif [[ $2 = 64[Bb][Ff][Nn] ]]; then
 		lunch treble_arm64_bfN-userdebug
 		target_name="arm64_bfN"
 	elif [[ $2 = 64[Bb][Ff][Ss ]]; then
@@ -167,6 +170,22 @@ buildSecureVndkliteVariant() {
 	echo
 }
 
+buildDeviceSpecific() {
+	echo
+	echo "--> Generating $target-vndklite-secure"
+	echo
+	sleep 1
+	cd $RL/sas-creator
+	sudo bash ./lite-adapter.sh 64 $HOME/builds/TrebleDroid-13-${target_name}.img
+	mv s.img $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img
+	sudo rm -rf d tmp
+	sudo bash ./securize.sh $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img THIRDARGUMENTWHICHMAKESSASCREATORREMOVESOMESTUFF
+	mv s-secure.img $HOME/builds/TrebleDroid-13-${target_name}-vndklite-secure.img
+	sudo rm -rf d tmp
+	cd $RL
+	echo
+}
+
 generatePackages() {
 	echo
 	echo "--> Generating packages"
@@ -188,24 +207,25 @@ generatePackages() {
 
 START=`date +%s`
 BUILD_DATE="$(date +%Y%m%d)"
-
-if [[ $1 = "sync" && $2 = 64[Bb][FfGgVv][NnSs] ]]; then
+if [[ $1 = "sync" && ( $2 = 64[Bb][FfGgVv][NnSs] || $2 = aosp_anne ) ]]; then
 	initRepos
 	syncRepos
 	applyPatches
 	setupEnv
 	makeMake
 	buildVariant
+	if [[ $2 = aosp_anne ]]; then buildDeviceSpecific; fi
 	if [[ "vndklite" == +(["$3$4$5$6"]) ]]; then buildVndkliteVariant; fi
 	if [[ "secure" == +(["$3$4$5$6"]) ]]; then buildSecureVariant; fi
 	if [[ "litesec" == +(["$3$4$5$6"]) ]]; then buildSecureVndkliteVariant; fi
 	if [[ "pack" == +(["$3$4$5$6"]) ]]; then generatePackages; fi
 
-elif [[ $1 = "dry" && $2 = 64[Bb][FfGgVv][NnSs] ]]; then
+elif [[ $1 = "dry" && ( $2 = 64[Bb][FfGgVv][NnSs] || $2 = aosp_anne ) ]]; then
 	applyPatches
 	setupEnv
 	makeMake
 	buildVariant
+	if [[ $2 = aosp_anne ]]; then buildDeviceSpecific; fi
 	if [[ "vndklite" == +(["$3$4$5$6"]) ]]; then buildVndkliteVariant; fi
 	if [[ "secure" == +(["$3$4$5$6"]) ]]; then buildSecureVariant; fi
 	if [[ "litesec" == +(["$3$4$5$6"]) ]]; then buildSecureVndkliteVariant; fi
