@@ -58,7 +58,7 @@ syncRepos() {
 	echo
 	sleep 1
 	cd $RL
-	repo sync -c --force-sync --no-clone-bundle --no-tags -j$(nproc --all)
+	repo sync -c --force-sync --no-clone-bundle --optimized-fetch --no-tags -j$(nproc --all)
 	echo
 }
 
@@ -68,7 +68,8 @@ applyPatches() {
 	echo
 	sleep 1
 	cd $RL
-	bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/patches
+	bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/trebledroid
+	bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/personal
 	echo
 }
 
