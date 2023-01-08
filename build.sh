@@ -5,10 +5,10 @@ SWAP=$(free -g | grep Swap: | awk '{print $2}')
 
 echo
 echo "------------------------------"
-echo "	   Generic					"
-echo "			AOSP				"
-echo "			   Build			"
-echo "				   Script		"
+echo "     Generic                  "
+echo "          AOSP                "
+echo "             Build            "
+echo "                 Script       "
 echo "------------------------------"
 echo
 
@@ -39,36 +39,6 @@ set -e
 RL=$(dirname "$(realpath "$0")")
 
 initRepos() {
-	if [ ! -x "$(command -v repo)" ]; then
-		echo
-		echo "--> Repo binary not found"
-		echo
-		if [ $(lsb_release -si) = "Ubuntu" ]; then
-			echo
-			read -p '--> Install it and other dependencies? [Y/N]' REPOVAR
-			echo
-			if [[ $REPOVAR = [Yy] ]]; then
-				echo
-				echo "--> Installing..."
-				echo
-				cd $HOME
-				sh -c "$(curl -fsSL https://raw.githubusercontent.com/utkustnr/dotfiles/main/ubuntu/ready-distro.sh)"
-				cd $RL
-			else
-				echo
-				echo "--> Install repo and other dependencies before running this script"
-				echo
-				sleep 2
-				exit 1
-			fi
-		else
-			echo
-			echo "--> Install repo and other dependencies before running this script"
-			echo
-			sleep 2
-			exit 1
-		fi
-	fi
 	if [ ! -f $RL/.repo/manifest.xml ]; then
 		echo
 		echo "--> Initializing Repo"
