@@ -1,26 +1,37 @@
 #!/bin/bash
 
-ram=$(free -g | grep Mem: | awk '{print $2}')
-swap=$(free -g | grep Swap: | awk '{print $2}')
+RAM=$(free -g | grep Mem: | awk '{print $2}')
+SWAP=$(free -g | grep Swap: | awk '{print $2}')
 
 echo
 echo "------------------------------"
-echo "     Generic                  "
-echo "          AOSP                "
-echo "             Build            "
-echo "                 Script       "
+echo "	   Generic					"
+echo "			AOSP				"
+echo "			   Build			"
+echo "				   Script		"
 echo "------------------------------"
 echo
 
-if (( $ram+$swap < 16 )); then
+if (( $RAM+$SWAP < 16 )); then
 	echo 
 	echo "WARNING"
 	echo "Your system memory is not enough to build."
 	echo "You can try increasing swap or lowering threads used."
 	echo "WARNING"
 	echo
-	echo "You have 5 seconds to cancel with Ctrl+C"
-	sleep 5
+	read -p 'Do you want to continue? [Y/N]' RAMCHECK
+	if [[ $RAMCHECK = [Yy] ]]; then
+		echo
+		echo "You've been warned..."
+		echo
+		sleep 1
+	else
+		echo
+		echo "Exiting script..."
+		echo
+		sleep 1
+		exit 1
+	fi
 fi
 
 set -e
@@ -28,6 +39,36 @@ set -e
 RL=$(dirname "$(realpath "$0")")
 
 initRepos() {
+	if [ ! -x "$(command -v repo)" ]; then
+		echo
+		echo "--> Repo binary not found"
+		echo
+		if [ $(lsb_release -si) = "Ubuntu" ]; then
+			echo
+			read -p '--> Install it and other dependencies? [Y/N]' REPOVAR
+			echo
+			if [[ $REPOVAR = [Yy] ]]; then
+				echo
+				echo "--> Installing..."
+				echo
+				cd $HOME
+				sh -c "$(curl -fsSL https://raw.githubusercontent.com/utkustnr/dotfiles/main/ubuntu/ready-distro.sh)"
+				cd $RL
+			else
+				echo
+				echo "--> Install repo and other dependencies before running this script"
+				echo
+				sleep 2
+				exit 1
+			fi
+		else
+			echo
+			echo "--> Install repo and other dependencies before running this script"
+			echo
+			sleep 2
+			exit 1
+		fi
+	fi
 	if [ ! -f $RL/.repo/manifest.xml ]; then
 		echo
 		echo "--> Initializing Repo"
@@ -102,11 +143,11 @@ buildTrebleApp() {
 	echo "--> Building treble_app"
 	echo
 	sleep 1
-    cd $RL/treble_app
-    bash build.sh release
-    cp TrebleApp.apk ../vendor/hardware_overlay/TrebleApp/app.apk
-    cd $RL
-    echo
+	cd $RL/treble_app
+	bash build.sh release
+	cp TrebleApp.apk ../vendor/hardware_overlay/TrebleApp/app.apk
+	cd $RL
+	echo
 }
 
 buildVariant() {
@@ -135,78 +176,97 @@ buildVariant() {
 	fi
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE installclean
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE -j$(nproc --all) systemimage
-	find $OUT_DIR/target/product -name 'system.img' -exec mv {} $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE.img \;
-	BASE_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE.img
+	find $OUT_DIR/target/product -name 'system.img' -exec mv {} $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE.img \;
+	BASE_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE.img
 	echo "$BASE_IMAGE done"
 }
 
 buildVndkliteVariant() {
 	echo
-	echo "--> Generating $target-vndklite"
+	echo "--> Generating $BASE_IMAGE-vndklite"
 	echo
 	sleep 1
 	cd $RL/sas-creator
 	sudo bash ./lite-adapter.sh 64 $BASE_IMAGE
-	mv s.img $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+	mv s.img $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
 	sudo rm -rf d tmp
 	cd $RL
-	VNDK_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+	VNDK_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
 	echo "$VNDK_IMAGE done"
 }
 
 buildSecureVariant() {
 	echo
-	echo "--> Generating $target-secure"
+	echo "--> Generating $BASE_IMAGE-secure"
 	echo
 	sleep 1
 	cd $RL/sas-creator
 	sudo bash ./securize.sh $BASE_IMAGE
-	mv s-secure.img $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-secure.img
+	mv s-secure.img $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-secure.img
 	sudo rm -rf d tmp
 	cd $RL
-	SEC_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-secure.img
+	SEC_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-secure.img
 	echo "$SEC_IMAGE done"
 }
 
 buildSecureVndkliteVariant() {
 	echo
-	echo "--> Generating $target-vndklite-secure"
+	echo "--> Generating $BASE_IMAGE-vndklite-secure"
 	echo
 	sleep 1
 	cd $RL/sas-creator
 	if [ ! -f $VNDK_IMAGE ]; then
 		sudo bash ./lite-adapter.sh 64 $BASE_IMAGE
-		mv s.img $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+		mv s.img $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
 		sudo rm -rf d tmp
-		VNDK_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+		VNDK_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
 	fi
 	sleep 1
 	sudo bash ./securize.sh $VNDK_IMAGE
-	mv s-secure.img $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite-secure.img
+	mv s-secure.img $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite-secure.img
 	sudo rm -rf d tmp
 	cd $RL
-	LSEC_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite-secure.img
+	LSEC_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite-secure.img
 	echo "$LSEC_IMAGE done"
 }
 
 buildLightVariant() {
 	echo
-	echo "--> Generating $target-light"
+	echo "--> Generating $BASE_IMAGE-light"
 	echo
 	sleep 1
 	cd $RL/sas-creator
 	if [ ! -f $VNDK_IMAGE ]; then
 		sudo bash ./lite-adapter.sh 64 $BASE_IMAGE
-		mv s.img $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+		mv s.img $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
 		sudo rm -rf d tmp
-		VNDK_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+		VNDK_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
 	fi
 	sleep 1
-	sudo bash ./securize.sh $VNDK_IMAGE Huawei 28
-	mv s-secure.img $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-light.img
+	echo
+	echo "Choose and write your brand exactly as it's shown below"
+	echo "asus | blackview | bq | duoqin | essential | fairphone | htc | huawei | infinix | lenovo | lg"
+	echo "lge | mbi | meizu | moto | nokia | nubia | oneplus | oppo | oukitel | razer | realme"
+	echo "samsung | sharp | sony | teclast | tecno | teracube | umidigi | unihertz | vivo | vsmart | xiaomi"
+	echo
+	read -p '--> Your brand :' BRANDVAR
+	echo
+	echo "Choose your stock vendor version"
+	echo "28 (Android 9) | 29 (Android 10) | 30 (Android 11) | 31 (Android 12) | 32 (Android 12.1) | 33 (Android 13)"
+	echo
+	read -p '--> Your vendor :' VENDORVAR
+	echo
+	if [ -f $LSEC_IMAGE ]; then
+		echo "Using vndklite-secure image"
+		sudo bash ./featherize.sh $LSEC_IMAGE $BRANDVAR $VENDORVAR
+	elif [ ! -f $LSEC_IMAGE ] && [ -f $VNDK_IMAGE ]; then
+		echo "vndklite-secure image wasn't found, using vndklite image"
+		sudo bash ./featherize.sh $VNDK_IMAGE $BRANDVAR $VENDORVAR
+	fi
+	mv feather.img $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-light.img
 	sudo rm -rf d tmp
 	cd $RL
-	LITE_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-light.img
+	LITE_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-light.img
 	echo "$LITE_IMAGE done"
 }
 
@@ -237,12 +297,14 @@ BUILD_DATE="$(date +%Y%m%d)"
 if [ $# -eq 0 ]; then
 	echo
 	echo "#############"
-	echo "No Args supplied"
+	echo "No arguments supplied"
 	echo "Correct Usage Is :"
 	echo "sudo bash ./build.sh [dry / sync] [64B{FGV}{NS}] [vndklite / secure / lsec / light / pack]"
 	echo "#############"
 	echo
-elif [[ $1 = "sync" && $2 = 64[Bb][FfGgVv][NnSs]]]; then
+	exit 1
+
+elif [ $1 = "sync" ] && [[ $2 = 64[Bb][FfGgVv][NnSs] ]]; then
 	initRepos
 	syncRepos
 	applyPatches
@@ -256,7 +318,7 @@ elif [[ $1 = "sync" && $2 = 64[Bb][FfGgVv][NnSs]]]; then
 	if [[ "light" == +(["$3$4$5$6$7"]) ]]; then buildLightVariant; fi
 	if [[ "pack" == +(["$3$4$5$6$7"]) ]]; then generatePackages; fi
 
-elif [[ $1 = "dry" && $2 = 64[Bb][FfGgVv][NnSs]]]; then
+elif [ $1 = "dry" ] && [[ $2 = 64[Bb][FfGgVv][NnSs] ]]; then
 	applyPatches
 	setupEnv
 	makeMake
@@ -268,13 +330,14 @@ elif [[ $1 = "dry" && $2 = 64[Bb][FfGgVv][NnSs]]]; then
 	if [[ "light" == +(["$3$4$5$6$7"]) ]]; then buildLightVariant; fi
 	if [[ "pack" == +(["$3$4$5$6$7"]) ]]; then generatePackages; fi
 
-elif [[ $1 = "sync" && -z "$2$3$4$5" ]]; then
+elif [ $1 = "sync" ] && [ -z "$2$3$4$5" ]; then
 	echo
 	echo "--> OnlySync™"
 	echo
 	sleep 2
 	initRepos
 	syncRepos
+
 else
 	echo
 	echo "#############"
@@ -283,6 +346,7 @@ else
 	echo "sudo bash ./build.sh [dry / sync] [64B{FGV}{NS}] [vndklite / secure / lsec / light / pack]"
 	echo "#############"
 	echo
+	exit 1
 fi
 
 END=`date +%s`
