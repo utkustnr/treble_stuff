@@ -5,22 +5,23 @@ swap=$(free -g | grep Swap: | awk '{print $2}')
 
 echo
 echo "------------------------------"
-echo "   Generic AOSP Build Script  "
-echo "                              "
-echo "        If You're Stuck       "
-echo "     Keep Calm And Ctrl+C     "
+echo "     Generic                  "
+echo "          AOSP                "
+echo "             Build            "
+echo "                 Script       "
 echo "------------------------------"
 echo
 
 if (( $ram+$swap < 16 )); then
+	echo 
 	echo "WARNING"
 	echo "Your system memory is not enough to build."
 	echo "You can try increasing swap or lowering threads used."
 	echo "WARNING"
-	echo 
+	echo
+	echo "You have 5 seconds to cancel with Ctrl+C"
+	sleep 5
 fi
-
-sleep 5
 
 set -e
 
@@ -32,7 +33,7 @@ initRepos() {
 		echo "--> Initializing Repo"
 		echo
 		cd $RL
-		repo init -u https://android.googlesource.com/platform/manifest -b android-13.0.0_r14 --depth=1
+		repo init -u https://android.googlesource.com/platform/manifest -b android-13.0.0_r24 --depth=1
 		echo
 	fi
 	if [ ! -f $RL/.repo/local_manifests/manifest.xml ]; then
@@ -43,13 +44,14 @@ initRepos() {
 		mv $RL/manifest.xml $RL/.repo/local_manifests
 		echo
 	fi
-	#Placeholder for external patch locations
-	#if [ ! -f $RL/treble_patches ]; then
-	#	echo "--> Fetching Patch List from Remote Location"
-	#	rm -rf $RL/treble_patches
-	#	git clone https://github.com/ChonDoit/treble_superior_patches.git -b 13 $RL/treble_patches
-	#	echo
-	#fi
+	if [ ! -f $RL/treble_patches/patches ]; then
+		echo
+		echo "--> Fetching Patch List from Remote Location"
+		echo
+		wget https://github.com/TrebleDroid/treble_experimentations/releases/latest/download/patches-for-developers.zip -P $RL/treble_patches
+		unzip $RL/treble_patches/patches-for-developers.zip -d treble_patches
+		echo
+	fi
 }
 
 syncRepos() {
@@ -68,8 +70,7 @@ applyPatches() {
 	echo
 	sleep 1
 	cd $RL
-	bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/trebledroid
-	bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/personal
+	bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/patches
 	echo
 }
 
@@ -96,37 +97,47 @@ makeMake() {
 	echo
 }
 
+buildTrebleApp() {
+	echo
+	echo "--> Building treble_app"
+	echo
+	sleep 1
+    cd $RL/treble_app
+    bash build.sh release
+    cp TrebleApp.apk ../vendor/hardware_overlay/TrebleApp/app.apk
+    cd $RL
+    echo
+}
+
 buildVariant() {
 	echo
 	echo "--> Starting build process"
 	echo
 	sleep 1
-	if [[ $2 = aosp_anne ]]; then
-		lunch aosp_anne-userdebug
-		target_name="aosp_anne"
-	elif [[ $2 = 64[Bb][Ff][Nn] ]]; then
+	if [[ $2 = 64[Bb][Ff][Nn] ]]; then
 		lunch treble_arm64_bfN-userdebug
-		target_name="arm64_bfN"
+		TARGET_NAME="arm64-bfN"
 	elif [[ $2 = 64[Bb][Ff][Ss ]]; then
 		lunch treble_arm64_bfS-userdebug
-		target_name="arm64_bfS"
+		TARGET_NAME="arm64-bfS"
 	elif [[ $2 = 64[Bb][Gg][Nn] ]]; then
 		lunch treble_arm64_bgN-userdebug
-		target_name="arm64_bgN"
+		TARGET_NAME="arm64-bgN"
 	elif [[ $2 = 64[Bb][Gg][Ss] ]]; then
 		lunch treble_arm64_bgS-userdebug
-		target_name="arm64_bgS"
+		TARGET_NAME="arm64-bgS"
 	elif [[ $2 = 64[Bb][Vv][Nn] ]]; then
 		lunch treble_arm64_bvN-userdebug
-		target_name="arm64_bvN"
+		TARGET_NAME="arm64-bvN"
 	elif [[ $2 = 64[Bb][Vv][Ss] ]]; then
 		lunch treble_arm64_bvS-userdebug
-		target_name="arm64_bvS"
+		TARGET_NAME="arm64-bvS"
 	fi
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE installclean
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE -j$(nproc --all) systemimage
-	mv $OUT/target/product/*/system.img $HOME/builds/TrebleDroid-13-${target_name}.img
-	echo
+	find $OUT_DIR/target/product -name 'system.img' -exec mv {} $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE.img \;
+	BASE_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE.img
+	echo "$BASE_IMAGE done"
 }
 
 buildVndkliteVariant() {
@@ -135,11 +146,12 @@ buildVndkliteVariant() {
 	echo
 	sleep 1
 	cd $RL/sas-creator
-	sudo bash ./lite-adapter.sh 64 $HOME/builds/TrebleDroid-13-${target_name}.img
-	mv s.img $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img
+	sudo bash ./lite-adapter.sh 64 $BASE_IMAGE
+	mv s.img $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
 	sudo rm -rf d tmp
 	cd $RL
-	echo
+	VNDK_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+	echo "$VNDK_IMAGE done"
 }
 
 buildSecureVariant() {
@@ -148,11 +160,12 @@ buildSecureVariant() {
 	echo
 	sleep 1
 	cd $RL/sas-creator
-	sudo bash ./securize.sh $HOME/builds/TrebleDroid-13-${target_name}.img
-	mv s-secure.img $HOME/builds/TrebleDroid-13-${target_name}-secure.img
+	sudo bash ./securize.sh $BASE_IMAGE
+	mv s-secure.img $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-secure.img
 	sudo rm -rf d tmp
 	cd $RL
-	echo
+	SEC_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-secure.img
+	echo "$SEC_IMAGE done"
 }
 
 buildSecureVndkliteVariant() {
@@ -161,30 +174,40 @@ buildSecureVndkliteVariant() {
 	echo
 	sleep 1
 	cd $RL/sas-creator
-	sudo bash ./lite-adapter.sh 64 $HOME/builds/TrebleDroid-13-${target_name}.img
-	mv s.img $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img
-	sudo rm -rf d tmp
-	sudo bash ./securize.sh $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img
-	mv s-secure.img $HOME/builds/TrebleDroid-13-${target_name}-vndklite-secure.img
+	if [ ! -f $VNDK_IMAGE ]; then
+		sudo bash ./lite-adapter.sh 64 $BASE_IMAGE
+		mv s.img $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+		sudo rm -rf d tmp
+		VNDK_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+	fi
+	sleep 1
+	sudo bash ./securize.sh $VNDK_IMAGE
+	mv s-secure.img $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite-secure.img
 	sudo rm -rf d tmp
 	cd $RL
-	echo
+	LSEC_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite-secure.img
+	echo "$LSEC_IMAGE done"
 }
 
-buildDeviceSpecific() {
+buildLightVariant() {
 	echo
-	echo "--> Generating $target-vndklite-secure"
+	echo "--> Generating $target-light"
 	echo
 	sleep 1
 	cd $RL/sas-creator
-	sudo bash ./lite-adapter.sh 64 $HOME/builds/TrebleDroid-13-${target_name}.img
-	mv s.img $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img
-	sudo rm -rf d tmp
-	sudo bash ./securize.sh $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img THIRDARGUMENTWHICHMAKESSASCREATORREMOVESOMESTUFF
-	mv s-secure.img $HOME/builds/TrebleDroid-13-${target_name}-vndklite-secure.img
+	if [ ! -f $VNDK_IMAGE ]; then
+		sudo bash ./lite-adapter.sh 64 $BASE_IMAGE
+		mv s.img $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+		sudo rm -rf d tmp
+		VNDK_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+	fi
+	sleep 1
+	sudo bash ./securize.sh $VNDK_IMAGE Huawei 28
+	mv s-secure.img $HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-light.img
 	sudo rm -rf d tmp
 	cd $RL
-	echo
+	LITE_IMAGE=$HOME/builds/TrebleDroid-13-$TARGET_NAME-$BUILD_DATE-light.img
+	echo "$LITE_IMAGE done"
 }
 
 generatePackages() {
@@ -192,45 +215,58 @@ generatePackages() {
 	echo "--> Generating packages"
 	echo
 	sleep 1
-	xz -cv $HOME/builds/TrebleDroid-13-${target_name}.img -T0 > $HOME/builds/TrebleDroid-13-${target_name}.img.xz
-	if [ -f $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img ]; then
-		xz -cv $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img -T0 > $HOME/builds/TrebleDroid-13-${target_name}-vndklite.img.xz
+	xz -cv $BASE_IMAGE -T0 > $BASE_IMAGE.xz
+	if [ -f $VNDK_IMAGE ]; then
+		xz -cv $VNDK_IMAGE -T0 > $VNDK_IMAGE.xz
 	fi
-	if [ -f $HOME/builds/TrebleDroid-13-${target_name}-secure.img ]; then
-		xz -cv $HOME/builds/TrebleDroid-13-${target_name}-secure.img -T0 > $HOME/builds/TrebleDroid-13-${target_name}-secure.img.xz
+	if [ -f $SEC_IMAGE ]; then
+		xz -cv $SEC_IMAGE -T0 > $SEC_IMAGE.xz
 	fi
-	if [ -f $HOME/builds/TrebleDroid-13-${target_name}-vndklite-secure.img ]; then
-		xz -cv $HOME/builds/TrebleDroid-13-${target_name}-vndklite-secure.img -T0 > $HOME/builds/TrebleDroid-13-${target_name}-vndklite-secure.img.xz
+	if [ -f $LSEC_IMAGE ]; then
+		xz -cv $LSEC_IMAGE -T0 > $LSEC_IMAGE.xz
 	fi
-	rm -rf $HOME/builds/TrebleDroid-13*.img
+	if [ -f $LITE_IMAGE ]; then
+		xz -cv $LITE_IMAGE -T0 > $LITE_IMAGE.xz
+	fi
+	find $HOME/builds -name "*.img" -type f -delete
 	echo
 }
 
 START=`date +%s`
 BUILD_DATE="$(date +%Y%m%d)"
-if [[ $1 = "sync" && ( $2 = 64[Bb][FfGgVv][NnSs] || $2 = aosp_anne ) ]]; then
+if [ $# -eq 0 ]; then
+	echo
+	echo "#############"
+	echo "No Args supplied"
+	echo "Correct Usage Is :"
+	echo "sudo bash ./build.sh [dry / sync] [64B{FGV}{NS}] [vndklite / secure / lsec / light / pack]"
+	echo "#############"
+	echo
+elif [[ $1 = "sync" && $2 = 64[Bb][FfGgVv][NnSs]]]; then
 	initRepos
 	syncRepos
 	applyPatches
 	setupEnv
 	makeMake
+	buildTrebleApp
 	buildVariant
-	if [[ $2 = aosp_anne ]]; then buildDeviceSpecific; fi
-	if [[ "vndklite" == +(["$3$4$5$6"]) ]]; then buildVndkliteVariant; fi
-	if [[ "secure" == +(["$3$4$5$6"]) ]]; then buildSecureVariant; fi
-	if [[ "litesec" == +(["$3$4$5$6"]) ]]; then buildSecureVndkliteVariant; fi
-	if [[ "pack" == +(["$3$4$5$6"]) ]]; then generatePackages; fi
+	if [[ "vndklite" == +(["$3$4$5$6$7"]) ]]; then buildVndkliteVariant; fi
+	if [[ "secure" == +(["$3$4$5$6$7"]) ]]; then buildSecureVariant; fi
+	if [[ "lsec" == +(["$3$4$5$6$7"]) ]]; then buildSecureVndkliteVariant; fi
+	if [[ "light" == +(["$3$4$5$6$7"]) ]]; then buildLightVariant; fi
+	if [[ "pack" == +(["$3$4$5$6$7"]) ]]; then generatePackages; fi
 
-elif [[ $1 = "dry" && ( $2 = 64[Bb][FfGgVv][NnSs] || $2 = aosp_anne ) ]]; then
+elif [[ $1 = "dry" && $2 = 64[Bb][FfGgVv][NnSs]]]; then
 	applyPatches
 	setupEnv
 	makeMake
+	buildTrebleApp
 	buildVariant
-	if [[ $2 = aosp_anne ]]; then buildDeviceSpecific; fi
-	if [[ "vndklite" == +(["$3$4$5$6"]) ]]; then buildVndkliteVariant; fi
-	if [[ "secure" == +(["$3$4$5$6"]) ]]; then buildSecureVariant; fi
-	if [[ "litesec" == +(["$3$4$5$6"]) ]]; then buildSecureVndkliteVariant; fi
-	if [[ "pack" == +(["$3$4$5$6"]) ]]; then generatePackages; fi
+	if [[ "vndklite" == +(["$3$4$5$6$7"]) ]]; then buildVndkliteVariant; fi
+	if [[ "secure" == +(["$3$4$5$6$7"]) ]]; then buildSecureVariant; fi
+	if [[ "lsec" == +(["$3$4$5$6$7"]) ]]; then buildSecureVndkliteVariant; fi
+	if [[ "light" == +(["$3$4$5$6$7"]) ]]; then buildLightVariant; fi
+	if [[ "pack" == +(["$3$4$5$6$7"]) ]]; then generatePackages; fi
 
 elif [[ $1 = "sync" && -z "$2$3$4$5" ]]; then
 	echo
@@ -244,7 +280,8 @@ else
 	echo "#############"
 	echo "Invalid Args"
 	echo "Correct Usage Is :"
-	echo "bash ./build.sh [dry / sync] [64B{FGV}{NS}] [vndklite / secure / litesec / pack]"
+	echo "sudo bash ./build.sh [dry / sync] [64B{FGV}{NS}] [vndklite / secure / lsec / light / pack]"
+	echo "#############"
 	echo
 fi
 

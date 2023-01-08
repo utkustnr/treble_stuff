@@ -1,33 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-<remote name="frax3r" fetch="https://github.com/utkustnr/" />
-<remote name="notmyst33d" fetch="https://github.com/notmyst33d/" />
-<remote name="phh" fetch="https://github.com/phhusson/" />
-<remote name="ponces" fetch="https://github.com/ponces/" />
-<remote name="seedvault-app" fetch="https://github.com/seedvault-app" />
-<remote name="trebledroid" fetch="https://github.com/TrebleDroid/" />
-<remote name="turex" fetch="https://github.com/turex/" />
-
-<!-- Base -->
-<project path="device/phh/treble" name="device_phh_treble" remote="frax3r" revision="android-13.0" />
-<project path="sas-creator" name="sas-creator" remote="frax3r" revision="master" />
-<project path="vendor/hardware_overlay" name="vendor_hardware_overlay" remote="trebledroid" revision="pie" />
-<project path="vendor/interfaces" name="vendor_interfaces" remote="phh" revision="android-11.0" />
-<project path="vendor/lptools" name="vendor_lptools" remote="phh" revision="master" />
-<project path="vendor/magisk" name="vendor_magisk" remote="phh" revision="android-10.0" />
-<project path="vendor/vndk-tests" name="vendor_vndk-tests" remote="phh" revision="master" />
-
-<!-- External -->
-<project path="external/aptx" name="libaptX" remote="notmyst33d" revision="main" />
-<project path="packages/apps/Seedvault" name="seedvault" remote="seedvault-app" revision="android13" />
-
-<!-- Device Specific -->
-<project path="device/huawei/anne" name="android_device_huawei_anne" remote="frax3r" revision="android-13.0" />
-<project path="device/huawei/hi6250-common" name="android_device_huawei_hi6250-common" remote="frax3r" revision="android-13.0" />
-<project path="vendor/huawei" name="proprietary_vendor_huawei" remote="frax3r" revision="android-13.0" />
-
-<!-- Maybe later...
-<project path="kernel/huawei/hi6250" name="android_kernel_huawei_hi6250" remote="turex" revision="upstream" />
--->
-
+  <project name="TrebleDroid/device_phh_treble" path="device/phh/treble" remote="github" revision="android-13.0" />
+  <project name="TrebleDroid/vendor_hardware_overlay" path="vendor/hardware_overlay" remote="github" revision="pie" />
+  <project name="notmyst33d/libaptX" path="external/aptx" remote="github" revision="main" />
+  <project name="phhusson/treble_app" path="treble_app" remote="github" revision="master" />
+  <project name="phhusson/vendor_interfaces" path="vendor/interfaces" remote="github" revision="android-11.0" />
+  <project name="phhusson/vendor_magisk" path="vendor/magisk" remote="github" revision="android-10.0" />
+  <project name="phhusson/vendor_vndk-tests" path="vendor/vndk-tests" remote="github" revision="master" />
+  <project name="utkustnr/sas-creator" path="sas-creator" remote="github" revision="master" />
+  <project path="device/generic/common" name="device/generic/common" groups="pdk" />
+  <project path="phhusson/vendor_lptools" name="vendor/lptools" remote="github" revision="master" />
 </manifest>
