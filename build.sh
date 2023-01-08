@@ -55,7 +55,7 @@ initRepos() {
 		mv $RL/manifest.xml $RL/.repo/local_manifests
 		echo
 	fi
-	if [ ! -f $RL/treble_patches/patches ]; then
+	if [ ! -d $RL/treble_patches/patches ]; then
 		echo
 		echo "--> Fetching Patch List from Remote Location"
 		echo

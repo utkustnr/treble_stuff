@@ -13,7 +13,7 @@ To get started with building AOSP GSI, you'll need to get familiar with [Git and
 - Then, start the build script:
 
 	```
-	sudo bash ./treble_stuff/build.sh sync 64bvs vndklite pack
+	bash ./treble_stuff/build.sh sync 64bvs vndklite pack
 	```
 
 Accepted arguments : ` [dry / sync] [64B{FGV}{NS}] [vndklite / secure / lsec / light / pack]`
