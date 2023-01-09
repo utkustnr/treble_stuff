@@ -37,8 +37,6 @@ fi
 set -e
 
 RL=$(dirname "$(realpath "$0")")
-ANDROID_BASE=LineageOS
-ANDROID_VER=18.1
 
 initRepos() {
 	if [ ! -f $RL/.repo/manifest.xml ]; then
@@ -109,7 +107,7 @@ initRepos() {
 		echo
 		echo "--> Fetching Patch List from Remote Location"
 		echo
-		if [[ $ANDROID_BASE = [Aa][Oo][Ss][Pp] ]]; then
+		if [[ $ANDROID_BASE = "AOSP" ]]; then
 			if [[ $ANDROID_VER = "13" ]]; then
 				wget https://github.com/TrebleDroid/treble_experimentations/releases/latest/download/patches-for-developers.zip -P $RL/treble_patches
 				unzip $RL/treble_patches/patches-for-developers.zip -d treble_patches
@@ -118,7 +116,7 @@ initRepos() {
 				unzip $RL/treble_patches/patches.zip -d treble_patches
 			fi
 		
-		elif [[ $ANDROID_BASE = [Ll][Oo][Ss] ]]; then
+		elif [[ $ANDROID_BASE = "LineageOS" ]]; then
 			if [[ $ANDROID_VER = "20" ]]; then
 				wget https://github.com/TrebleDroid/treble_experimentations/releases/latest/download/patches-for-developers.zip -P $RL/treble_patches
 				unzip $RL/treble_patches/patches-for-developers.zip -d treble_patches
@@ -146,6 +144,20 @@ applyPatches() {
 	echo
 	sleep 1
 	cd $RL
+	if [[ $ANDROID_BASE = "LineageOS" ]]; then
+		if [[ $ANDROID_VER = "18.1" ]]; then
+			echo "--> Andy or treble?"
+			read -p '--> ' PATCHVER
+				if [[ $PATCHVER = "andy" ]]; then
+					echo "--> Applying Andyyan's personal patches"
+					bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/patches/patches_platform
+					bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/patches/patches_platform_personal
+				else
+					echo "--> Applying treble patches"
+					bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/patches/patches_treble
+				fi
+		fi
+	fi
 	bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/patches
 	echo
 }
