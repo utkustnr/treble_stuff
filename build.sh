@@ -44,7 +44,49 @@ initRepos() {
 		echo "--> Initializing Repo"
 		echo
 		cd $RL
-		repo init -u https://android.googlesource.com/platform/manifest -b android-13.0.0_r24 --depth=1
+		echo
+		echo "Choose manifest"
+		echo "Options : AOSP | LOS | CUSTOM (placeholder)"
+		echo
+		read -p '--> ' MANIFESTVAR
+		echo
+		echo "Choose android version"
+		echo "Options : 11 | 13"
+		echo
+		read -p '--> ' ANDROIDVAR
+		echo
+		if [[ $MANIFESTVAR = [Aa][Oo][Ss][Pp] ]]; then
+			ANDROID_BASE=AOSP
+			if [[ $ANDROIDVAR = "13" ]]; then
+				ANDROID_VER=13
+				repo init -u https://android.googlesource.com/platform/manifest -b android-13.0.0_r24 --depth=1
+			elif [[ $ANDROIDVAR = "11" ]]; then
+				ANDROID_VER=11
+				repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r48 --depth=1
+			else
+				echo "Invalid"
+				exit 1
+			fi
+		elif [[ $MANIFESTVAR = [Ll][Oo][Ss] ]]; then
+			ANDROID_BASE=LineageOS
+			if [[ $ANDROIDVAR = "13" ]]; then
+				ANDROID_VER=13
+				repo init -u https://github.com/LineageOS/android.git -b lineage-20 --depth=1
+			elif [[ $ANDROIDVAR = "11" ]]; then
+				ANDROID_VER=11
+				repo init -u https://github.com/LineageOS/android.git -b lineage-18.1 --depth=1
+			else
+				echo "Invalid"
+				exit 1
+			fi
+		elif [[ $MANIFESTVAR = "CUSTOM" ]]; then
+			ANDROID_BASE=system
+			echo "placeholder"
+			exit 1
+		else
+			echo "Invalid"
+			exit 1
+		fi
 		echo
 	fi
 	if [ ! -f $RL/.repo/local_manifests/manifest.xml ]; then
@@ -59,8 +101,13 @@ initRepos() {
 		echo
 		echo "--> Fetching Patch List from Remote Location"
 		echo
-		wget https://github.com/TrebleDroid/treble_experimentations/releases/latest/download/patches-for-developers.zip -P $RL/treble_patches
-		unzip $RL/treble_patches/patches-for-developers.zip -d treble_patches
+		if [[ $ANDROIDVAR = "13" ]]; then
+			wget https://github.com/TrebleDroid/treble_experimentations/releases/latest/download/patches-for-developers.zip -P $RL/treble_patches
+			unzip $RL/treble_patches/patches-for-developers.zip -d treble_patches
+		elif [[ $ANDROIDVAR = "11" ]]; then
+			wget https://github.com/phhusson/treble_experimentations/releases/download/v313/patches.zip -P $RL/treble_patches
+			unzip $RL/treble_patches/patches.zip -d treble_patches
+		fi
 		echo
 	fi
 }
@@ -128,7 +175,7 @@ buildVariant() {
 	if [[ $2 = 64[Bb][Ff][Nn] ]]; then
 		lunch treble_arm64_bfN-userdebug
 		TARGET_NAME="arm64-bfN"
-	elif [[ $2 = 64[Bb][Ff][Ss ]]; then
+	elif [[ $2 = 64[Bb][Ff][Ss] ]]; then
 		lunch treble_arm64_bfS-userdebug
 		TARGET_NAME="arm64-bfS"
 	elif [[ $2 = 64[Bb][Gg][Nn] ]]; then
@@ -146,97 +193,121 @@ buildVariant() {
 	fi
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE installclean
 	make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE -j$(nproc --all) systemimage
-	find $OUT_DIR/target/product -name 'system.img' -exec mv {} $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE.img \;
-	BASE_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE.img
+	find $OUT_DIR/target/product -name 'system.img' -exec mv {} $HOME/builds/$ANDROID_BASE-$ANDROID_VER-$TARGET_NAME-$BUILD_DATE.img \;
+	BASE_NAME=$ANDROID_BASE-$ANDROID_VER-$TARGET_NAME-$BUILD_DATE
+	BASE_IMAGE=$HOME/builds/$ANDROID_BASE-$ANDROID_VER-$TARGET_NAME-$BUILD_DATE.img
+	echo "$BASE_IMAGE done"
+}
+
+fakeBuild() {
+	echo
+	echo "--> For debug purposes"
+	echo
+	sleep 1
+	if [[ $2 = fake ]]; then
+		echo "lunch treble_arm64_bvN-userdebug"
+		TARGET_NAME="arm64-bvN"
+	fi
+	echo "make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE installclean"
+	echo "make RELAX_USES_LIBRARY_CHECK=true BUILD_NUMBER=$BUILD_DATE -j$(nproc --all) systemimage"
+	mkdir -p $OUT_DIR/target/product
+	echo "this is the part where I move built image to $OUT_DIR/target/product and rename it to system.img"
+	read -p "Waiting for keypress..."
+	find $OUT_DIR/target/product -name 'system.img' -exec mv {} $HOME/builds/$ANDROID_BASE-$ANDROID_VER-$TARGET_NAME-$BUILD_DATE.img \;
+	BASE_NAME=$ANDROID_BASE-$ANDROID_VER-$TARGET_NAME-$BUILD_DATE
+	BASE_IMAGE=$HOME/builds/$ANDROID_BASE-$ANDROID_VER-$TARGET_NAME-$BUILD_DATE.img
 	echo "$BASE_IMAGE done"
 }
 
 buildVndkliteVariant() {
 	echo
-	echo "--> Generating $BASE_IMAGE-vndklite"
+	echo "--> Generating $TARGET_NAME-vndklite"
 	echo
 	sleep 1
 	cd $RL/sas-creator
 	sudo bash ./lite-adapter.sh 64 $BASE_IMAGE
-	mv s.img $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+	mv s.img $HOME/builds/$BASE_NAME-vndklite.img
 	sudo rm -rf d tmp
 	cd $RL
-	VNDK_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+	VNDK_IMAGE=$HOME/builds/$BASE_NAME-vndklite.img
 	echo "$VNDK_IMAGE done"
 }
 
 buildSecureVariant() {
 	echo
-	echo "--> Generating $BASE_IMAGE-secure"
+	echo "--> Generating $TARGET_NAME-secure"
 	echo
 	sleep 1
 	cd $RL/sas-creator
 	sudo bash ./securize.sh $BASE_IMAGE
-	mv s-secure.img $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-secure.img
+	mv s-secure.img $HOME/builds/$BASE_NAME-secure.img
 	sudo rm -rf d tmp
 	cd $RL
-	SEC_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-secure.img
+	SEC_IMAGE=$HOME/builds/$BASE_NAME-secure.img
 	echo "$SEC_IMAGE done"
 }
 
 buildSecureVndkliteVariant() {
 	echo
-	echo "--> Generating $BASE_IMAGE-vndklite-secure"
+	echo "--> Generating $TARGET_NAME-vndklite-secure"
 	echo
 	sleep 1
 	cd $RL/sas-creator
 	if [ ! -f $VNDK_IMAGE ]; then
-		sudo bash ./lite-adapter.sh 64 $BASE_IMAGE
-		mv s.img $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
-		sudo rm -rf d tmp
-		VNDK_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+		buildVndkliteVariant
 	fi
 	sleep 1
 	sudo bash ./securize.sh $VNDK_IMAGE
-	mv s-secure.img $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite-secure.img
+	mv s-secure.img $HOME/builds/$BASE_NAME-vndklite-secure.img
 	sudo rm -rf d tmp
 	cd $RL
-	LSEC_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite-secure.img
+	LSEC_IMAGE=$HOME/builds/$BASE_NAME-vndklite-secure.img
 	echo "$LSEC_IMAGE done"
 }
 
 buildLightVariant() {
 	echo
-	echo "--> Generating $BASE_IMAGE-light"
+	echo "--> Generating $TARGET_NAME-light"
 	echo
 	sleep 1
 	cd $RL/sas-creator
 	if [ ! -f $VNDK_IMAGE ]; then
-		sudo bash ./lite-adapter.sh 64 $BASE_IMAGE
-		mv s.img $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
-		sudo rm -rf d tmp
-		VNDK_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-vndklite.img
+		buildVndkliteVariant
 	fi
 	sleep 1
 	echo
-	echo "Choose and write your brand exactly as it's shown below"
+	echo "Choose and write your brand exactly as it's shown below as lowercase"
 	echo "asus | blackview | bq | duoqin | essential | fairphone | htc | huawei | infinix | lenovo | lg"
 	echo "lge | mbi | meizu | moto | nokia | nubia | oneplus | oppo | oukitel | razer | realme"
 	echo "samsung | sharp | sony | teclast | tecno | teracube | umidigi | unihertz | vivo | vsmart | xiaomi"
 	echo
-	read -p '--> Your brand :' BRANDVAR
+	read -p '--> ' BRANDVAR
 	echo
-	echo "Choose your stock vendor version"
+	echo "Choose your stock vendor version (eg. write 28 if it's stock is android 9)"
 	echo "28 (Android 9) | 29 (Android 10) | 30 (Android 11) | 31 (Android 12) | 32 (Android 12.1) | 33 (Android 13)"
 	echo
-	read -p '--> Your vendor :' VENDORVAR
+	read -p '--> ' VENDORVAR
 	echo
 	if [ -f $LSEC_IMAGE ]; then
 		echo "Using vndklite-secure image"
-		sudo bash ./featherize.sh $LSEC_IMAGE $BRANDVAR $VENDORVAR
+		if [[ $BRANDVAR = @(asus|blackview|bq|duoqin|essential|fairphone|htc|huawei|infinix|lenovo|lg|lge|mbi|meizu|moto|nokia|nubia|oneplus|oppo|oukitel|razer|realme|samsung|sharp|sony|teclast|tecno|teracube|umidigi|unihertz|vivo|vsmart|xiaomi) ]]; then
+			sudo bash ./featherize.sh $LSEC_IMAGE $BRANDVAR $VENDORVAR
+		else
+			echo "Invalid brand, skipping light image."
+		fi
+
 	elif [ ! -f $LSEC_IMAGE ] && [ -f $VNDK_IMAGE ]; then
 		echo "vndklite-secure image wasn't found, using vndklite image"
-		sudo bash ./featherize.sh $VNDK_IMAGE $BRANDVAR $VENDORVAR
+		if [[ $BRANDVAR = @(asus|blackview|bq|duoqin|essential|fairphone|htc|huawei|infinix|lenovo|lg|lge|mbi|meizu|moto|nokia|nubia|oneplus|oppo|oukitel|razer|realme|samsung|sharp|sony|teclast|tecno|teracube|umidigi|unihertz|vivo|vsmart|xiaomi) ]]; then
+			sudo bash ./featherize.sh $VNDK_IMAGE $BRANDVAR $VENDORVAR
+		else
+			echo "Invalid brand, skipping light image."
+		fi
 	fi
-	mv feather.img $HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-light.img
+	mv feather.img $HOME/builds/$BASE_NAME-$BRANDVAR-$VENDORVAR.img
 	sudo rm -rf d tmp
 	cd $RL
-	LITE_IMAGE=$HOME/builds/system-13-$TARGET_NAME-$BUILD_DATE-light.img
+	LITE_IMAGE=$HOME/builds/$BASE_NAME-$BRANDVAR-$VENDORVAR.img
 	echo "$LITE_IMAGE done"
 }
 
@@ -258,7 +329,7 @@ generatePackages() {
 	if [ -f $LITE_IMAGE ]; then
 		xz -cv $LITE_IMAGE -T0 > $LITE_IMAGE.xz
 	fi
-	find $HOME/builds -name "*.img" -type f -delete
+	for f in 'find $HOME/builds -name "*.img"'; do rm $f; done
 	echo
 }
 
@@ -294,6 +365,20 @@ elif [ $1 = "dry" ] && [[ $2 = 64[Bb][FfGgVv][NnSs] ]]; then
 	makeMake
 	buildTrebleApp
 	buildVariant
+	if [[ "vndklite" == +(["$3$4$5$6$7"]) ]]; then buildVndkliteVariant; fi
+	if [[ "secure" == +(["$3$4$5$6$7"]) ]]; then buildSecureVariant; fi
+	if [[ "lsec" == +(["$3$4$5$6$7"]) ]]; then buildSecureVndkliteVariant; fi
+	if [[ "light" == +(["$3$4$5$6$7"]) ]]; then buildLightVariant; fi
+	if [[ "pack" == +(["$3$4$5$6$7"]) ]]; then generatePackages; fi
+	
+elif [ $1 = "sync" ] && [ $2 = "debug" ]; then
+	initRepos
+	syncRepos
+	applyPatches
+	setupEnv
+	makeMake
+	#buildTrebleApp
+	fakeBuild
 	if [[ "vndklite" == +(["$3$4$5$6$7"]) ]]; then buildVndkliteVariant; fi
 	if [[ "secure" == +(["$3$4$5$6$7"]) ]]; then buildSecureVariant; fi
 	if [[ "lsec" == +(["$3$4$5$6$7"]) ]]; then buildSecureVndkliteVariant; fi
