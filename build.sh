@@ -19,7 +19,7 @@ if (( $RAM+$SWAP < 16 )); then
 	echo "You can try increasing swap or lowering threads used."
 	echo "WARNING"
 	echo
-	read -p 'Do you want to continue? [Y/N]' RAMCHECK
+	read -p 'Do you want to continue regardless? [Y/N]' RAMCHECK
 	if [[ $RAMCHECK = [Yy] ]]; then
 		echo
 		echo "You've been warned..."
@@ -38,6 +38,7 @@ set -e
 
 RL=$(dirname "$(realpath "$0")")
 
+
 initRepos() {
 	if [ ! -f $RL/.repo/manifest.xml ]; then
 		echo
@@ -46,7 +47,7 @@ initRepos() {
 		cd $RL
 		echo
 		echo "Choose manifest"
-		echo "Options : AOSP | LOS | CUSTOM (placeholder)"
+		echo "Options : AOSP | LOS"
 		echo
 		read -p '--> ' MANIFESTVAR
 		echo
@@ -85,24 +86,38 @@ initRepos() {
 				echo "Invalid"
 				exit 1
 			fi
-		elif [[ $MANIFESTVAR = "CUSTOM" ]]; then
-			sed -i '40i ANDROID_BASE=system' $RL/build.sh
-			echo "placeholder"
-			exit 1
 		else
 			echo "Invalid"
 			exit 1
 		fi
-		echo
 	fi
+
 	if [ ! -f $RL/.repo/local_manifests/manifest.xml ]; then
 		echo
-		echo "--> Moving Local Manifest"
+		echo "--> Creating Local Manifest"
 		echo
 		mkdir -p $RL/.repo/local_manifests
-		mv $RL/manifest.xml $RL/.repo/local_manifests
-		echo
+		if [[ $ANDROID_BASE = "AOSP" ]]; then
+			if [[ $ANDROID_VER = "13" ]]; then
+				cp $RL/manifest.xml $RL/.repo/local_manifests
+			elif [[ $ANDROID_VER = "11" ]]; then
+				cp $RL/manifest.xml $RL/.repo/local_manifests
+				sed -i 's|TrebleDroid/device_phh_treble|phhusson/device_phh_treble|g' $RL/.repo/local_manifests/manifest.xml
+				sed -i 's|path="device/phh/treble" remote="treble" revision="android-13.0"|path="device/phh/treble" remote="treble" revision="android-11.0"|g' $RL/.repo/local_manifests/manifest.xml
+				sed -i 's|TrebleDroid/vendor_hardware_overlay|phhusson/vendor_hardware_overlay|g' $RL/.repo/local_manifests/manifest.xml
+			fi
+		
+		elif [[ $ANDROID_BASE = "LineageOS" ]]; then
+			if [[ $ANDROID_VER = "20" ]]; then
+				wget https://raw.githubusercontent.com/AndyCGYan/lineage_build_unified/lineage-20-td/local_manifests_treble/manifest.xml -P $RL/.repo/local_manifests
+				sed -i '10i \  <project name="utkustnr/sas-creator" path="sas-creator" remote="github" revision="master" />' $RL/.repo/local_manifests/manifest.xml
+			elif [[ $ANDROID_VER = "18.1" ]]; then
+				wget https://raw.githubusercontent.com/AndyCGYan/lineage_build_unified/lineage-18.1/local_manifests_treble/manifest.xml -P $RL/.repo/local_manifests
+				sed -i '8i \  <project name="utkustnr/sas-creator" path="sas-creator" remote="github" revision="master" />' $RL/.repo/local_manifests/manifest.xml
+			fi
+		fi
 	fi
+
 	if [ ! -d $RL/treble_patches/patches ]; then
 		echo
 		echo "--> Fetching Patch List from Remote Location"
@@ -118,13 +133,11 @@ initRepos() {
 		
 		elif [[ $ANDROID_BASE = "LineageOS" ]]; then
 			if [[ $ANDROID_VER = "20" ]]; then
-				wget https://github.com/TrebleDroid/treble_experimentations/releases/latest/download/patches-for-developers.zip -P $RL/treble_patches
-				unzip $RL/treble_patches/patches-for-developers.zip -d treble_patches
+				git clone https://github.com/AndyCGYan/lineage_patches_unified.git -b lineage-20-td $RL/treble_patches/patches
 			elif [[ $ANDROID_VER = "18.1" ]]; then
-				git clone https://github.com/AndyCGYan/lineage_patches_unified.git $RL/treble_patches/patches
+				git clone https://github.com/AndyCGYan/lineage_patches_unified.git -b lineage-18.1 $RL/treble_patches/patches
 			fi
 		fi
-		echo
 	fi
 }
 
@@ -144,21 +157,31 @@ applyPatches() {
 	echo
 	sleep 1
 	cd $RL
-	if [[ $ANDROID_BASE = "LineageOS" ]]; then
-		if [[ $ANDROID_VER = "18.1" ]]; then
-			echo "--> Andy or treble?"
-			read -p '--> ' PATCHVER
-				if [[ $PATCHVER = "andy" ]]; then
-					echo "--> Applying Andyyan's personal patches"
-					bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/patches/patches_platform
-					bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/patches/patches_platform_personal
-				else
-					echo "--> Applying treble patches"
-					bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/patches/patches_treble
-				fi
-		fi
+	if [[ $ANDROID_BASE = "LineageOS" ]] && [[ $ANDROID_VER = "20" ]]; then
+		echo "bash ./treble_patches/apply-patches.sh ./treble_patches/patches/patches_treble_prerequisite"
+		echo "bash ./treble_patches/apply-patches.sh ./treble_patches/patches/patches_treble_td"
+		echo "bash ./treble_patches/apply-patches.sh ./treble_patches/patches/patches_treble"
+		echo "bash ./treble_patches/apply-patches.sh ./treble_patches/patches/patches_treble_personal"
+		echo "bash ./treble_patches/apply-patches.sh ./treble_patches/patches/patches_platform"
+		echo "bash ./treble_patches/apply-patches.sh ./treble_patches/patches/patches_platform_personal"
+		echo "Andy's patches break my script..."
+		echo "Apply manually with commands on top from another terminal at treble_stuff folder"
+		read -p '--> Press enter when done...'
+		cd $RL
+	elif [[ $ANDROID_BASE = "LineageOS" ]] && [[ $ANDROID_VER = "18.1" ]]; then
+		echo "bash ./treble_patches/apply-patches.sh ./treble_patches/patches/patches_treble_prerequisite"
+		echo "bash ./treble_patches/apply-patches.sh ./treble_patches/patches/patches_treble_phh"
+		echo "bash ./treble_patches/apply-patches.sh ./treble_patches/patches/patches_treble"
+		echo "bash ./treble_patches/apply-patches.sh ./treble_patches/patches/patches_treble_personal"
+		echo "bash ./treble_patches/apply-patches.sh ./treble_patches/patches/patches_platform"
+		echo "bash ./treble_patches/apply-patches.sh ./treble_patches/patches/patches_platform_personal"
+		echo "Andy's patches break my script..."
+		echo "Apply manually with commands on top from another terminal at treble_stuff folder"
+		read -p '--> Press enter when done...'
+		cd $RL
+	else
+		bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/patches
 	fi
-	bash $RL/treble_patches/apply-patches.sh $RL/treble_patches/patches
 	echo
 }
 
@@ -181,18 +204,6 @@ makeMake() {
 	sleep 1
 	cd $RL/device/phh/treble
 	bash ./generate.sh
-	cd $RL
-	echo
-}
-
-buildTrebleApp() {
-	echo
-	echo "--> Building treble_app"
-	echo
-	sleep 1
-	cd $RL/treble_app
-	bash build.sh release
-	cp TrebleApp.apk ../vendor/hardware_overlay/TrebleApp/app.apk
 	cd $RL
 	echo
 }
@@ -397,7 +408,6 @@ elif [ $1 = "sync" ] && [[ $2 = 64[Bb][FfGgVv][NnSs] ]]; then
 	applyPatches
 	setupEnv
 	makeMake
-	buildTrebleApp
 	buildVariant
 	if [[ "vndklite" == +(["$3$4$5$6$7"]) ]]; then buildVndkliteVariant; fi
 	if [[ "secure" == +(["$3$4$5$6$7"]) ]]; then buildSecureVariant; fi
@@ -409,7 +419,6 @@ elif [ $1 = "dry" ] && [[ $2 = 64[Bb][FfGgVv][NnSs] ]]; then
 	applyPatches
 	setupEnv
 	makeMake
-	buildTrebleApp
 	buildVariant
 	if [[ "vndklite" == +(["$3$4$5$6$7"]) ]]; then buildVndkliteVariant; fi
 	if [[ "secure" == +(["$3$4$5$6$7"]) ]]; then buildSecureVariant; fi
@@ -417,13 +426,12 @@ elif [ $1 = "dry" ] && [[ $2 = 64[Bb][FfGgVv][NnSs] ]]; then
 	if [[ "light" == +(["$3$4$5$6$7"]) ]]; then buildLightVariant; fi
 	if [[ "pack" == +(["$3$4$5$6$7"]) ]]; then generatePackages; fi
 	
-elif [ $1 = "sync" ] || [ $1 = "dry" ] && [ $2 = "debug" ]; then
+elif [[ $2 = "debug" ]]; then
 	initRepos
 	#syncRepos
 	applyPatches
 	setupEnv
 	makeMake
-	#buildTrebleApp
 	fakeBuild
 	if [[ "vndklite" == +(["$3$4$5$6$7"]) ]]; then buildVndkliteVariant; fi
 	if [[ "secure" == +(["$3$4$5$6$7"]) ]]; then buildSecureVariant; fi
