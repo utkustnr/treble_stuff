@@ -98,6 +98,13 @@ buildTwrp
 sleep 5
 endBuild
 
+cd $TWRP_DIR/kernel/samsung/a73xq
+git clean -fdx
+cd $TWRP_DIR/device/samsung/a73xq
+git clean -fdx
+cd $TWRP_DIR
+make clean
+
 END=`date +%s`
 ELAPSEDM=$(($(($END-$START))/60))
 ELAPSEDS=$(($(($END-$START))-$ELAPSEDM*60))
